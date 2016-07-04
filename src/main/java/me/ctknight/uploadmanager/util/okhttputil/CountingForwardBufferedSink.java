@@ -17,13 +17,13 @@ import okio.Sink;
 import okio.Source;
 import okio.Timeout;
 
-public class CountingBufferedForwardSink implements BufferedSink, Sink {
+public class CountingForwardBufferedSink implements BufferedSink, Sink {
     private final CountingCallback callback;
     private long total;
     private long written = 0;
     private BufferedSink delegate;
 
-    public CountingBufferedForwardSink(BufferedSink sink, CountingCallback callback) {
+    public CountingForwardBufferedSink(BufferedSink sink, CountingCallback callback) {
         this.delegate = sink;
         this.callback = callback;
     }
@@ -90,7 +90,10 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public long writeAll(Source source) throws IOException {
-        return delegate.writeAll(source);
+        delegate.flush();
+        long singleWritten = delegate.writeAll(source);
+        written += singleWritten;
+        return singleWritten;
     }
 
     /**
@@ -135,6 +138,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeHexadecimalUnsignedLong(long v) throws IOException {
+        written += Long.SIZE;
         return delegate.writeHexadecimalUnsignedLong(v);
     }
 
@@ -143,6 +147,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeDecimalLong(long v) throws IOException {
+        written += Long.SIZE;
         return delegate.writeDecimalLong(v);
     }
 
@@ -151,6 +156,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeLong(long v) throws IOException {
+        written += Long.SIZE;
         return delegate.writeLong(v);
     }
 
@@ -159,6 +165,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeLongLe(long v) throws IOException {
+        written += Long.SIZE;
         return delegate.writeLongLe(v);
     }
 
@@ -167,6 +174,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeIntLe(int i) throws IOException {
+        written += Integer.SIZE;
         return delegate.writeIntLe(i);
     }
 
@@ -175,6 +183,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeInt(int i) throws IOException {
+        written += Integer.SIZE;
         return delegate.writeInt(i);
     }
 
@@ -183,6 +192,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeShortLe(int s) throws IOException {
+        written += Short.SIZE;
         return delegate.writeShortLe(s);
     }
 
@@ -191,6 +201,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeShort(int s) throws IOException {
+        written += Short.SIZE;
         return delegate.writeShort(s);
     }
 
@@ -199,6 +210,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeByte(int b) throws IOException {
+        written += Byte.SIZE;
         return delegate.writeByte(b);
     }
 
@@ -208,6 +220,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeString(String string, int beginIndex, int endIndex, Charset charset) throws IOException {
+        written += Character.SIZE * (endIndex - beginIndex);
         return delegate.writeString(string, beginIndex, endIndex, charset);
     }
 
@@ -220,10 +233,35 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
     }
 
     /**
-     * Encodes {@code codePoint} in UTF-8 and writes it to this sink.
+     * Encodes {@code Buffer} in UTF-8 and writes it to this sink.
      */
     @Override
     public BufferedSink writeUtf8CodePoint(int codePoint) throws IOException {
+        // see Buffer writeUtf8CodePoint(int codePoint)
+        if (codePoint < 0x80) {
+            // Emit a 7-bit code point with 1 byte.
+            written += 1;
+
+        } else if (codePoint < 0x800) {
+            // Emit a 11-bit code point with 2 bytes.
+            written += 2;
+
+        } else if (codePoint < 0x10000) {
+            if (codePoint >= 0xd800 && codePoint <= 0xdfff) {
+                written += 0;
+            } else {
+                // Emit a 16-bit code point with 3 bytes.
+                writeByte(codePoint >> 12 | 0xe0); // 1110xxxx
+                written += 3;
+            }
+
+        } else if (codePoint <= 0x10ffff) {
+            // Emit a 21-bit code point with 4 bytes.
+            written += 4;
+
+        } else {
+            written += 0;
+        }
         return delegate.writeUtf8CodePoint(codePoint);
     }
 
@@ -233,6 +271,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeUtf8(String string, int beginIndex, int endIndex) throws IOException {
+        written += Character.SIZE * (endIndex - beginIndex);
         return delegate.writeUtf8(string, beginIndex, endIndex);
     }
 
@@ -241,6 +280,7 @@ public class CountingBufferedForwardSink implements BufferedSink, Sink {
      */
     @Override
     public BufferedSink writeUtf8(String string) throws IOException {
+        // use writeUtf8(String string, int beginIndex, int endIndex) don't repeat
         return delegate.writeUtf8(string);
     }
 

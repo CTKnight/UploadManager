@@ -31,7 +31,6 @@ import me.ctknight.uploadmanager.util.okhttputil.CountingInputStreamMultipartBod
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -48,19 +47,16 @@ import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNKNOWN_ERR
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY;
 
-;
-
 
 public class UploadThread implements Runnable, CountingInputStreamMultipartBody.ProgressListener {
 
     private static final int DEFAULT_TIMEOUT = (int) (20 * 1000L);
 
     private static final String TAG = "UploadThread";
+    private static final OkHttpClient mClient = buildClient();
     private final Context mContext;
     private final UploadNotifier mNotifier;
     private final long mId;
-
-    private final OkHttpClient mClient = buildClient();
     private final UploadInfo mInfo;
     // global setting
     private final UploadInfoDelta mInfoDelta;
@@ -95,7 +91,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     }
 
     @NonNull
-    private OkHttpClient buildClient() {
+    private static OkHttpClient buildClient() {
         return new OkHttpClient.Builder()
                 .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
@@ -310,7 +306,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
     private RequestBody buildRequestBody() throws IOException {
         CountingInputStreamMultipartBody.Builder builder = new CountingInputStreamMultipartBody.Builder()
-                .setType(MultipartBody.FORM)
+                .setType(CountingInputStreamMultipartBody.FORM)
                 .addFormDataPart("file", new File(mInfo.mFileName).getName(),
                         CountingInputStreamMultipartBody.create(MediaType.parse(mInfo.mMimeType), getFileInputStream()));
         for (Map.Entry<String, String> cd : mInfo.getContentDisposition().entrySet()) {

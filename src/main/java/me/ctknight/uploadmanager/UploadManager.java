@@ -26,9 +26,30 @@ import java.util.List;
 import me.ctknight.uploadmanager.util.FileUtils;
 import me.ctknight.uploadmanager.util.UriUtils;
 
-import static me.ctknight.uploadmanager.UploadContract.*;
-import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.*;
-import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.*;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_ALLOW_ROAMING;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_CURRENT_BYTES;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_LAST_MODIFICATION;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS._DATA;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.CANNOT_RESUME;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.DEVICE_NOT_FOUND_ERROR;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.FILE_ERROR;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.FILE_NOT_FOUND;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.HTTP_DATA_ERROR;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.MIN_ARTIFICIAL_ERROR_STATUS;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.PENDING;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.RUNNING;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.SUCCESS;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.TOO_MANY_REDIRECTS;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNHANDLED_HTTP_CODE;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNHANDLED_REDIRECT;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_WIFI;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY;
+import static me.ctknight.uploadmanager.UploadContract.isStatusError;
 
 
 
@@ -238,7 +259,7 @@ public class UploadManager {
     /**
      * Broadcast intent action sent by the upload manager when a upload completes.
      */
-    public final static String ACTION_UPLOAD_COMPLETE = "com.myqsc.mobile3.intent.action.UPLOAD_COMPLETE";
+    public final static String ACTION_UPLOAD_COMPLETE = "me.ctknight.uploadmanager.intent.action.UPLOAD_COMPLETE";
 
     /**
      * Broadcast intent action sent by the upload manager when the user clicks on a running
@@ -250,7 +271,7 @@ public class UploadManager {
     /**
      * Intent action to launch an activity to display all uploads.
      */
-    public final static String ACTION_VIEW_UPLOADS = "com.myqsc.mobile3.box.intent.action.VIEW_UPLOADS";
+    public final static String ACTION_VIEW_UPLOADS = "me.ctknight.uploadmanager.intent.action.VIEW_UPLOADS";
 
     /**
      * Intent extra included with {@link #ACTION_VIEW_UPLOADS} to start UploadApp in
@@ -420,7 +441,7 @@ public class UploadManager {
                 cursor.close();
             }
         }
-        // downloaded file not found or its status is not 'successfully completed'
+        //uploaded file not found or its status is not 'successfully completed'
         return null;
     }
 
@@ -483,6 +504,7 @@ public class UploadManager {
         private String mDescription;
         private String mMimeType;
         private String mUserAgent;
+        // TODO: 2016/7/4 use List<Pair<String, String>> instead
         private String mCookie;
         private boolean mMobileAllowed = true;
         /**

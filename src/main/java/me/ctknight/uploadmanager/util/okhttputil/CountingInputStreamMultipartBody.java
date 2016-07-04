@@ -21,7 +21,7 @@ import okio.ByteString;
 import okio.Okio;
 import okio.Source;
 
-public class CountingInputStreamMultipartBody extends RequestBody implements CountingBufferedForwardSink.CountingCallback {
+public class CountingInputStreamMultipartBody extends RequestBody implements CountingForwardBufferedSink.CountingCallback {
     //this a copy of MultipartBody, nothing but create() was modified in order to support
 
     /**
@@ -273,7 +273,7 @@ public class CountingInputStreamMultipartBody extends RequestBody implements Cou
     }
 
     private long writeOrCountBytesViaDelegate(BufferedSink delegate, boolean countByte) throws IOException {
-        CountingBufferedForwardSink sinkWrapper = new CountingBufferedForwardSink(delegate, this);
+        CountingForwardBufferedSink sinkWrapper = new CountingForwardBufferedSink(delegate, this);
         return writeOrCountBytes(sinkWrapper, countByte);
     }
 
