@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;

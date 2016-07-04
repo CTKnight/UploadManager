@@ -1,5 +1,5 @@
 
-package me.ctknight.uploadmanager.upload.util;
+package me.ctknight.uploadmanager.util;
 /* Copyright (c) 2016 Lai Jiewen <alanljw12345@gmail.com>
 All Rights Reserved. */
 
@@ -12,9 +12,9 @@ import android.util.Log;
 
 import java.io.File;
 
-import me.ctknight.uploadmanager.upload.UploadManager;
+import me.ctknight.uploadmanager.UploadManager;
 
-import static me.ctknight.uploadmanager.upload.UploadManager.*;
+import static me.ctknight.uploadmanager.UploadManager.*;
 
 public class OpenHelper {
     public static final String TAG = "OpenHelper";

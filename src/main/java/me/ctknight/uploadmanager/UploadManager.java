@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 
 import android.content.ContentResolver;
@@ -23,12 +23,12 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.ctknight.uploadmanager.upload.util.FileUtils;
-import me.ctknight.uploadmanager.upload.util.UriUtils;
+import me.ctknight.uploadmanager.util.FileUtils;
+import me.ctknight.uploadmanager.util.UriUtils;
 
-import static me.ctknight.uploadmanager.upload.UploadContract.*;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.*;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_COLUMNS.*;
+import static me.ctknight.uploadmanager.UploadContract.*;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.*;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.*;
 
 
 

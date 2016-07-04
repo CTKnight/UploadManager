@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 public class UploadNetworkException extends UploadException {
 

@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -27,7 +27,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import me.ctknight.uploadmanager.upload.util.okhttputil.CountingInputStreamMultipartBody;
+import me.ctknight.uploadmanager.util.okhttputil.CountingInputStreamMultipartBody;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.MediaType;
@@ -39,14 +39,16 @@ import okhttp3.Response;
 
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.CANCELED;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.CANNOT_RESUME;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.HTTP_DATA_ERROR;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.RUNNING;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.SUCCESS;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.UNKNOWN_ERROR;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK;
-import static me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.CANCELED;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.CANNOT_RESUME;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.HTTP_DATA_ERROR;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.RUNNING;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.SUCCESS;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNKNOWN_ERROR;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK;
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY;
+
+;
 
 
 public class UploadThread implements Runnable, CountingInputStreamMultipartBody.ProgressListener {

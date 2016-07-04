@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload.util.okhttputil;/* Copyright (c) 2016 Lai Jiewen <alanljw12345@gmail.com>
+package me.ctknight.uploadmanager.util.okhttputil;/* Copyright (c) 2016 Lai Jiewen <alanljw12345@gmail.com>
 All Rights Reserved. */
 
 import java.io.IOException;

@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -24,7 +24,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import static me.ctknight.uploadmanager.upload.util.NetworkUtils.*;
+import static me.ctknight.uploadmanager.util.NetworkUtils.isConnected;
+import static me.ctknight.uploadmanager.util.NetworkUtils.isMobileNetwork;
 
 public class UploadInfo {
 

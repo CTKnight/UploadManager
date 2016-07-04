@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.content.ContentProvider;
 import android.content.ContentResolver;
@@ -221,7 +221,6 @@ public final class UploadProvider extends ContentProvider {
         mDatabaseHelper = new DatabaseHelper(getContext());
 
         Context context = getContext();
-        ApplicationInfo appInfo = context.getApplicationInfo();
 
         context.startService(new Intent(context, UploadService.class));
 

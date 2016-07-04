@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
@@ -20,8 +20,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import me.ctknight.uploadmanager.R;
-import me.ctknight.uploadmanager.upload.util.OpenHelper;
+import me.ctknight.uploadmanager.util.OpenHelper;
 
 public class UploadReceiver extends BroadcastReceiver {
     private static Handler sAsyncHandler;
@@ -122,7 +121,7 @@ public class UploadReceiver extends BroadcastReceiver {
 
     /**
      * Start activity to display the file represented by the given
-     * {@link me.ctknight.uploadmanager.upload.UploadContract.UPLOAD_COLUMNS#_ID}.
+     * {@link me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS#_ID}.
      */
     private void openUploadFile(Context context, long id) {
         if (!OpenHelper.startViewIntent(context, id, Intent.FLAG_ACTIVITY_NEW_TASK)) {

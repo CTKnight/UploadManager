@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload.util;
+package me.ctknight.uploadmanager.util;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -18,7 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
-import me.ctknight.uploadmanager.upload.UploadNetworkException;
+import me.ctknight.uploadmanager.UploadNetworkException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;

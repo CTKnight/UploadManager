@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload.util;
+package me.ctknight.uploadmanager.util;
 
 import android.content.res.Resources;
 

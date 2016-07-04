@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload;
+package me.ctknight.uploadmanager;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -27,8 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import me.ctknight.uploadmanager.R;
-import me.ctknight.uploadmanager.upload.util.TimeUtils;
+import me.ctknight.uploadmanager.util.TimeUtils;
 
 public class UploadNotifier {
 

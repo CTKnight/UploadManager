@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package me.ctknight.uploadmanager.upload.util.okhttputil;
+package me.ctknight.uploadmanager.util.okhttputil;
 
 import java.io.IOException;
 import java.io.InputStream;
