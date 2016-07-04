@@ -19,7 +19,7 @@
                  android:supportsRtl="true"
     >
         <provider android:authorities="me.ctknight.uploadmanager.uploadprovider"
-                  android:name=".upload.UploadProvider"
+                  android:name="UploadProvider"
                   android:enabled="true"
                   android:exported="false">
             <path-permission
@@ -29,11 +29,11 @@
             <grant-uri-permission android:pathPrefix="/uploads/"/>
         </provider>
 
-        <service android:name=".upload.UploadService"
+        <service android:name="UploadService"
                  android:enabled="true"
                  android:exported="false"/>
 
-        <receiver android:name=".upload.UploadReceiver"
+        <receiver android:name="UploadReceiver"
                   android:enabled="true"
                   android:exported="false">
             <intent-filter>
