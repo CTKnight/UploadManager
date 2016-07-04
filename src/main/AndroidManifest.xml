@@ -1,0 +1,45 @@
+<!--
+  ~ Copyright (c) 2016 Zhang Hai <Dreaming.in.Code.ZH@Gmail.com>
+  ~ All Rights Reserved.
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="me.ctknight.uploadmanager">
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS"/>
+
+    <application android:allowBackup="true"
+                 android:label="@string/app_name"
+                 android:supportsRtl="true"
+    >
+        <provider android:authorities="me.ctknight.uploadmanager.uploadprovider"
+                  android:name=".upload.UploadProvider"
+                  android:enabled="true"
+                  android:exported="false">
+            <path-permission
+                    android:pathPrefix="/uploads"
+                    android:permission="android.permission.INTERNET"/>
+            <!-- change with UploadContract.UPLOAD_URIS.CONTENT_URI. -->
+            <grant-uri-permission android:pathPrefix="/uploads/"/>
+        </provider>
+
+        <service android:name=".upload.UploadService"
+                 android:enabled="true"
+                 android:exported="false"/>
+
+        <receiver android:name=".upload.UploadReceiver"
+                  android:enabled="true"
+                  android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
