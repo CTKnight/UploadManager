@@ -1,5 +1,5 @@
 # UploadManager (Alpha)
-A Multipart upload solution, including notification and network change.
+A Multipart upload solution on Android, including progress notification and network change.
 This is a project based on AOSP DownloadManager, I implement this using Okhttp3.
 
 ------
