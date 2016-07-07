@@ -24,12 +24,14 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import me.ctknight.uploadmanager.util.LogUtils;
+
 import static me.ctknight.uploadmanager.util.NetworkUtils.isConnected;
 import static me.ctknight.uploadmanager.util.NetworkUtils.isMobileNetwork;
 
 public class UploadInfo {
 
-    public static final String TAG = "UploadInfo";
+    public static final String TAG = LogUtils.makeTag(UploadInfo.class);
 
     public static final String EXTRA_IS_WIFI_REQUIRED = "isWifiRequired";
     private final Context mContext;

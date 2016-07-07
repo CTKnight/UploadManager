@@ -35,9 +35,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import me.ctknight.uploadmanager.util.LogUtils;
+
 public final class UploadProvider extends ContentProvider {
 
-    private static final String TAG = UploadProvider.class.getSimpleName();
+    private static final String TAG = LogUtils.makeTag(UploadProvider.class);
     /** Database filename */
     private static final String DB_NAME = "uploads.db";
     /** Current database version */

@@ -20,7 +20,6 @@ import android.os.Message;
 import android.os.Process;
 import android.util.Log;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,13 +32,15 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import me.ctknight.uploadmanager.util.LogUtils;
+
 import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 
 public class UploadService extends Service {
 
     private static final int MSG_UPDATE = 1;
     private static final int MSG_FINAL_UPDATE = 2;
-    private static final String TAG = "UploadService";
+    private static final String TAG = LogUtils.makeTag(UploadService.class);
     private final Map<Long, UploadInfo> mUploads = new HashMap<>();
     private AlarmManager mAlarmManager;
     private UploadManagerContentObserver mObserver;
@@ -71,7 +72,7 @@ public class UploadService extends Service {
                 for (Map.Entry<Thread, StackTraceElement[]> entry :
                         Thread.getAllStackTraces().entrySet()) {
                     if (entry.getKey().getName().startsWith("pool")) {
-                        Log.d(TAG, entry.getKey() + ": " + Arrays.toString(entry.getValue()));
+//                        Log.d(TAG, entry.getKey() + ": " + Arrays.toString(entry.getValue()));
                     }
                 }
 
@@ -96,7 +97,7 @@ public class UploadService extends Service {
                 // will always be delivered with a new startId.
 
                 if (stopSelfResult(startId)) {
-                    Log.v(TAG, "Nothing left; stopped");
+//                    Log.v(TAG, "Nothing left; stopped");
                     getContentResolver().unregisterContentObserver(mObserver);
                     mUpdateThread.quit();
                 }
@@ -150,7 +151,7 @@ public class UploadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.v("UploadService", " created");
+        Log.v("UploadService", "created");
 
         mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
@@ -171,7 +172,7 @@ public class UploadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         int returnValue = super.onStartCommand(intent, flags, startId);
-        Log.v("UploadService", "Service onStart");
+        Log.v(TAG, "Service onStart");
 
         mLastStartId = startId;
         enqueueUpdate();
@@ -182,7 +183,7 @@ public class UploadService extends Service {
     public void onDestroy() {
         getContentResolver().unregisterContentObserver(mObserver);
         mUpdateThread.quit();
-        Log.v("UploadService", "Service onDestroy");
+//        Log.v("UploadService", "Service onDestroy");
         super.onDestroy();
     }
 
@@ -257,7 +258,7 @@ public class UploadService extends Service {
         mNotifier.updateWith(mUploads.values());
 
         if (nextActionMillis > 0 && nextActionMillis < Long.MAX_VALUE) {
-            Log.v("UploadService", "updateLocked: " + "scheduling start in " + nextActionMillis + "ms");
+            Log.v(TAG, "updateLocked: " + "scheduling start in " + nextActionMillis + "ms");
 
 
             final Intent intent = new Intent(UploadContract.ACTION_RETRY);
@@ -271,7 +272,7 @@ public class UploadService extends Service {
 
     private void updateUpload(UploadInfo.Reader reader, UploadInfo info) {
         reader.updateFromDatabase(info);
-        Log.v("UploadService", info.mId + " status: " + info.mStatus);
+//        Log.v("UploadService", info.mId + " status: " + info.mStatus);
     }
 
     private UploadInfo insertUploadLocked(UploadInfo.Reader reader) {
@@ -280,7 +281,7 @@ public class UploadService extends Service {
             mUploads.put(info.mId, info);
         }
 
-        Log.v("UploadService", "insertUploadLocked: " + "processing inserted upload " + info.mId);
+        Log.v(TAG, "insertUploadLocked: " + "processing inserted upload " + info.mId);
 
         return info;
     }

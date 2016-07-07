@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import me.ctknight.uploadmanager.util.LogUtils;
 import me.ctknight.uploadmanager.util.okhttputil.CountingInputStreamMultipartBody;
 import okhttp3.Call;
 import okhttp3.Headers;
@@ -52,7 +53,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
     private static final int DEFAULT_TIMEOUT = (int) (20 * 1000L);
 
-    private static final String TAG = "UploadThread";
+    private static final String TAG = LogUtils.makeTag(UploadThread.class);
     private static final OkHttpClient mClient = buildClient();
     private static final Object mMonitor = new Object();
     private final Context mContext;
@@ -105,7 +106,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
         final ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (UploadInfo.queryUploadStatus(mContext.getContentResolver(), mId) == SUCCESS) {
-            Log.d("UploadThread", "run: " + "skipping finished item");
+//            Log.d("UploadThread", "run: " + "skipping finished item");
             return;
         }
 
@@ -116,7 +117,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
             wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UploadThread");
             wakelock.acquire();
 
-            Log.d("UploadThread", "run: starting");
+//            Log.d("UploadThread", "run: starting");
 
             final NetworkInfo info = connectivityManager.getActiveNetworkInfo();
             if (info != null) {
@@ -181,7 +182,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
             Log.e(TAG, "Failed: " + mInfoDelta.mErrorMsg, t);
         } finally {
-            Log.d(TAG, "run: Finish with status" + mInfoDelta.mStatus);
+//            Log.d(TAG, "run: Finish with status" + mInfoDelta.mStatus);
 
             mNotifier.notifyUploadSpeed(mId, 0);
 
@@ -324,7 +325,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     }
 
     private void recordResponse(String responseMsg) {
-        Log.d(TAG, "executeUpload: " + responseMsg);
+//        Log.d(TAG, "executeUpload: " + responseMsg);
         mInfoDelta.mServerResponse = responseMsg;
         mInfoDelta.writeToDatabase();
     }
