@@ -15,17 +15,20 @@ import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.Pair;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.ctknight.uploadmanager.util.FileUtils;
 import me.ctknight.uploadmanager.util.UriUtils;
 
+import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_ALLOW_ROAMING;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_CURRENT_BYTES;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_LAST_MODIFICATION;
@@ -113,8 +116,6 @@ public class UploadManager {
     public final static String COLUMN_STATUS = UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS;
 
     public final static String COLUMN_USER_AGENT = UploadContract.RequestContent.COLUMN_USER_AGENT;
-
-    public final static String COLUMN_COOKIE = UploadContract.RequestContent.COLUMN_COOKIE_DATA;
 
     /**
      * Provides more detail on the status of the upload.  Its meaning depends on the value of
@@ -497,15 +498,14 @@ public class UploadManager {
         private Context mContext;
         private Uri mTargetUrl;
         private Uri mFileUri;
-        private List<Pair<String, String>> mRequestHeaders = new ArrayList<>();
-        private List<Pair<String, String>> mContentDispositions = new ArrayList<>();
+        private Map<String, String> mRequestHeaders = new HashMap<>();
+        private Map<String, String> mContentDispositions = new HashMap<>();
         private String mFilename;
         private String mTitle;
         private String mDescription;
         private String mMimeType;
         private String mUserAgent;
-        // TODO: 2016/7/4 use List<Pair<String, String>> instead
-        private String mCookie;
+        private String mDataFieldName;
         private boolean mMobileAllowed = true;
         /**
          * can take any of the following values: {@link #VISIBILITY_HIDDEN}
@@ -563,7 +563,7 @@ public class UploadManager {
          * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2">HTTP/1.1
          * Message Headers</a>
          */
-        public Request addRequestHeader(String header, String value) {
+        public Request addRequestHeader(@NonNull String header, @Nullable String value) {
             if (header == null) {
                 throw new NullPointerException("header cannot be null");
             }
@@ -573,11 +573,19 @@ public class UploadManager {
             if (value == null) {
                 value = "";
             }
-            mRequestHeaders.add(Pair.create(header, value));
+            mRequestHeaders.put(header, value);
             return this;
         }
 
-        public Request addContentDisposition(String name, String value) {
+        public Request addRequestHeaders(Map<String, String> headers) {
+            // add them one by one to avoid some Maps' not-allow-null implementation
+            for (String key : headers.keySet()) {
+                addRequestHeader(key, headers.get(key));
+            }
+            return this;
+        }
+
+        public Request addContentDisposition(@NonNull String name, @Nullable String value) {
             if (name == null) {
                 throw new NullPointerException("content disposition cannot be null");
             }
@@ -585,7 +593,14 @@ public class UploadManager {
             if (value == null) {
                 value = "";
             }
-            mContentDispositions.add(Pair.create(name, value));
+            mContentDispositions.put(name, value);
+            return this;
+        }
+
+        public Request addContentDispositions(Map<String, String> cds) {
+            for (String key : cds.keySet()) {
+                addContentDisposition(key, cds.get(key));
+            }
             return this;
         }
 
@@ -593,12 +608,6 @@ public class UploadManager {
             mUserAgent = userAgent;
             return this;
         }
-
-        public Request addCookie(String cookie) {
-            mCookie = cookie;
-            return this;
-        }
-
 
         /**
          * Set the title of this upload, to be displayed in notifications (if enabled).  If no
@@ -672,13 +681,26 @@ public class UploadManager {
         }
 
         /**
+         * set data field name.
+         * for example :
+         * ------WebKitFormBoundary6naClQj9yERx1WNV
+         * Content-Disposition: form-data; name="file"; filename="sum.docx"
+         * Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+         *
+         * where name = "file" and "file" is field name.
+         */
+        public Request setDataFieldName(String dataFieldName) {
+            mDataFieldName = dataFieldName;
+            return this;
+        }
+
+        /**
          * @return ContentValues to be passed to UploadProvider.insert()
          */
         ContentValues toContentValues() {
             ContentValues values = new ContentValues();
             assert mTargetUrl != null;
             values.put(COLUMN_TARGET_URL, mTargetUrl.toString());
-//            values.put(COLUMN_NOTIFICATION_PACKAGE, packageName);
 
             if (!mRequestHeaders.isEmpty()) {
                 encodeHttpHeaders(values);
@@ -693,11 +715,11 @@ public class UploadManager {
             putIfNonNull(values, COLUMN_FILE_URI, mFileUri);
             putIfNonNull(values, COLUMN_MIME_TYPE, mMimeType == null ? mContext.getContentResolver().getType(mFileUri) : mMimeType);
             putIfNonNull(values, COLUMN_TITLE, new File(mFilename).getName());
+            putIfNonNull(values, COLOMN_DATA_FIELD_NAME, mDataFieldName == null ? "file" : mDataFieldName);
             //use filename as default title.
             putIfNonNull(values, COLUMN_TITLE, mTitle);
             putIfNonNull(values, COLUMN_DESCRIPTION, mDescription);
             putIfNonNull(values, COLUMN_USER_AGENT, mUserAgent);
-            putIfNonNull(values, COLUMN_COOKIE, mCookie);
 
             values.put(COLUMN_VISIBILITY, mNotificationVisibility);
             values.put(COLUMN_ALLOW_ROAMING, mMobileAllowed);
@@ -706,8 +728,8 @@ public class UploadManager {
 
         private void encodeHttpHeaders(ContentValues values) {
             int index = 0;
-            for (Pair<String, String> header : mRequestHeaders) {
-                String headerString = header.first + ": " + header.second;
+            for (Map.Entry<String, String> entry : mRequestHeaders.entrySet()) {
+                String headerString = entry.getKey() + ": " + entry.getValue();
                 values.put(UploadContract.RequestContent.INSERT_KEY_PREFIX + index, headerString);
                 index++;
             }
@@ -715,8 +737,8 @@ public class UploadManager {
 
         private void encodePayload(ContentValues values) {
             int index = 0;
-            for (Pair<String, String> cd : mContentDispositions) {
-                String cdString = cd.first + ": " + cd.second;
+            for (Map.Entry<String, String> entry : mContentDispositions.entrySet()) {
+                String cdString = entry.getKey() + ": " + entry.getValue();
                 values.put(UploadContract.RequestContent.INSERT_CD_PREFIX + index, cdString);
                 index++;
             }

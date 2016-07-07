@@ -57,10 +57,10 @@ public class UploadInfo {
     public int mControl;
     public boolean mBypass;
     public String mServerResponse;
-    public String mCookieData;
     public String mUserAgent;
     public String mReferer;
     public boolean mAllowRoaming;
+    public String mDataFieldName;
 
     private Map<String, String> mRequestHeaders = new ArrayMap<>();
     private Map<String, String> mContentDisposition = new ArrayMap<>();
@@ -119,20 +119,6 @@ public class UploadInfo {
         intent = new Intent(UploadManager.ACTION_UPLOAD_COMPLETE);
         intent.setPackage(mPackage);
         intent.putExtra(UploadManager.EXTRA_UPLOAD_ID, mId);
-//         // legacy behavior
-//            if (mClass == null) {
-//                return;
-//            }
-//            intent = new Intent(UploadContract.ACTION_UPLOAD_COMPLETED);
-//            intent.setClassName(mPackage, mClass);
-//            if (mExtras != null) {
-//                intent.putExtra(UploadContract.UPLOAD_COLUMNS.COLUMN_NOTIFICATION_EXTRAS, mExtras);
-//            }
-//            // We only send the content: URI, for security reasons. Otherwise, malicious
-//            //     applications would have an easier time spoofing download results by
-//            //     sending spoofed intents.
-//            intent.setData(getUploadsUri());
-//
         mContext.sendBroadcast(intent);
     }
 
@@ -340,7 +326,6 @@ public class UploadInfo {
             info.mDescription = getString(UploadContract.UPLOAD_COLUMNS.COLUMN_DESCRIPTION);
             info.mControl = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_CONTROL);
             info.mBypass = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_BYPASS_NETWORK_CHANGE) == 1;
-            info.mCookieData = getString(UploadContract.RequestContent.COLUMN_COOKIE_DATA);
             info.mUserAgent = getString(UploadContract.RequestContent.COLUMN_USER_AGENT);
             info.mReferer = getString(UploadContract.RequestContent.COLUMN_REFERER);
             info.mAllowRoaming = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_ALLOW_ROAMING) != 0;
@@ -357,9 +342,9 @@ public class UploadInfo {
             Cursor cursor = mResolver.query(headerUri, null, null, null, null);
             try {
                 int headerIndex =
-                        cursor.getColumnIndexOrThrow(UploadContract.RequestContent.COLUMN_HEADER);
+                        cursor.getColumnIndexOrThrow(UploadContract.RequestContent.COLUMN_HEADER_NAME);
                 int valueIndex =
-                        cursor.getColumnIndexOrThrow(UploadContract.RequestContent.COLUMN_VALUE);
+                        cursor.getColumnIndexOrThrow(UploadContract.RequestContent.COLUMN_HEADER_VALUE);
                 for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                     if ((!cursor.isNull(headerIndex)) && (!cursor.isNull(valueIndex))) {
                         addHeader(info, cursor.getString(headerIndex), cursor.getString(valueIndex));
@@ -369,9 +354,6 @@ public class UploadInfo {
                 cursor.close();
             }
 
-            if (info.mCookieData != null) {
-                addHeader(info, "Cookie", info.mCookieData);
-            }
             if (info.mReferer != null) {
                 addHeader(info, "Referer", info.mReferer);
             }
@@ -382,6 +364,9 @@ public class UploadInfo {
             Uri contentDispositionUri = Uri.withAppendedPath(
                     info.getUploadsUri(), UploadContract.RequestContent.CD_URI_SEGMENT);
             Cursor cursor = mResolver.query(contentDispositionUri, null, null, null, null);
+            if (cursor == null) {
+                return;
+            }
             String contentValues = "";
             try {
                 int headerIndex =

@@ -54,6 +54,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
     private static final String TAG = "UploadThread";
     private static final OkHttpClient mClient = buildClient();
+    private static final Object mMonitor = new Object();
     private final Context mContext;
     private final UploadNotifier mNotifier;
     private final long mId;
@@ -92,10 +93,10 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
     @NonNull
     private static OkHttpClient buildClient() {
-        return new OkHttpClient.Builder()
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
-                .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
-                .build();
+                .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
+        return builder.build();
     }
 
     @Override
@@ -225,43 +226,26 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
         URL url;
 
-        int redirectionCount = 0;
-
         checkConnectivity();
 
         checkDeletedOrCanceled();
 
-        while (++redirectionCount < UploadContract.Constants.MAX_REDIRECTS) {
-            try {
-                url = new URL(mInfoDelta.mTargetUrl);
-            } catch (MalformedURLException e) {
-                throw new UploadException("Invalid URL");
-            }
-
-            try {
-                checkConnectivity();
-
-                final Response response = getResponse(url);
-                response.body().close();
-
-                // OkHttp will handle redirect automatically.
-                if (response.isSuccessful()) {
-                    uploadData(url);
-                    return;
-                } else {
-                    throw new UploadNetworkException("Unknown response :" + response);
-                }
-
-            } catch (Exception e) {
-                if (e instanceof FileNotFoundException) {
-                    throw e;
-                } else {
-                    throw new UploadNetworkException(e);
-                }
-            }
+        try {
+            url = new URL(mInfoDelta.mTargetUrl);
+        } catch (MalformedURLException e) {
+            throw new UploadException("Invalid URL");
         }
 
-        throw new UploadNetworkException("too many redirects");
+        try {
+            checkConnectivity();
+            uploadData(url);
+        } catch (Exception e) {
+            if (e instanceof FileNotFoundException) {
+                throw e;
+            } else {
+                throw new UploadNetworkException(e);
+            }
+        }
     }
 
     private void checkConnectivity() throws UploadException {
@@ -278,11 +262,6 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
             }
             throw new UploadException(status + networkState.name());
         }
-    }
-
-    private Response getResponse(URL url) throws IOException {
-        Request request = new Request.Builder().url(url).build();
-        return mClient.newCall(request).execute();
     }
 
     private InputStream getFileInputStream() throws IOException {
@@ -331,7 +310,9 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     }
 
     private void uploadData(URL url) throws IOException {
-        mCall = mClient.newCall(buildRequest(url));
+        synchronized (mMonitor) {
+            mCall = mClient.newCall(buildRequest(url));
+        }
         Response response = mCall.execute();
         String responseMsg = response.body().string();
         recordResponse(responseMsg);

@@ -126,6 +126,7 @@ public final class UploadContract {
         public static final String COLUMN_ALLOW_ROAMING = "allowroaming";
         public static final String COLUMN_ERROR_MSG = "errormsg";
         public static final String COLUMN_SERVER_RESPONSE = "response";
+        public static final String COLOMN_DATA_FIELD_NAME = "datafiled";
         //TODO: check if all columns are initialized in database onCreate() and UploadInfo
 
     }
@@ -179,18 +180,16 @@ public final class UploadContract {
 
     public static final class RequestContent {
         public static final String REQUEST_CONTENT_DB_TABLE = "requestcontent";
-        public static final String COLUMN_DOWNLOAD_ID = "downloadid";
-        public static final String COLUMN_HEADER = "header";
-        public static final String COLUMN_VALUE = "value";
+        public static final String COLUMN_UPLOAD_ID = "uploadid";
+        public static final String COLUMN_HEADER_NAME = "headername";
+        public static final String COLUMN_HEADER_VALUE = "headervalue";
 
         public static final String URI_SEGMENT = "headers";
         public static final String INSERT_KEY_PREFIX = "http_header_";
 
-        public static final String DEFAULT_USER_AGENT = "QSCTech Upload Manager";
+        public static final String DEFAULT_USER_AGENT = "me.ctknight.uploadmanager";
         //see:https://developer.chrome.com/multidevice/user-agent
 
-        //headers
-        public static final String COLUMN_COOKIE_DATA = "cookiedata";
         public static final String COLUMN_USER_AGENT = "useragent";
         public static final String COLUMN_REFERER = "referer";
 

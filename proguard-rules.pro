@@ -15,3 +15,16 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+
+-dontwarn okio.**
+
+-keep public class android.support.v7.widget.** { *; }
+-keep public class android.support.v7.internal.widget.** { *; }
+-keep public class android.support.v7.internal.view.menu.** { *; }
+
+-keep public class * extends android.support.v4.view.ActionProvider {
+    public <init>(android.content.Context);
+}
+
+-keep public class me.ctknight.uploadmanager.**

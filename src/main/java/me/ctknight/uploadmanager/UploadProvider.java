@@ -182,12 +182,12 @@ public final class UploadProvider extends ContentProvider {
         copyString(UploadContract.UPLOAD_COLUMNS._DATA, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE, values, filteredValues);
+        copyString(UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME, values, filteredValues);
         copyInteger(UploadContract.UPLOAD_COLUMNS.COLUMN_UID, values, filteredValues);
 
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_TITLE, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_DESCRIPTION, values, filteredValues);
 
-        copyString(UploadContract.RequestContent.COLUMN_COOKIE_DATA, values, filteredValues);
         copyString(UploadContract.RequestContent.COLUMN_USER_AGENT, values, filteredValues);
 
         copyInteger(UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY, values, filteredValues);
@@ -338,9 +338,7 @@ public final class UploadProvider extends ContentProvider {
         if (startService) {
             Context context = getContext();
             context.startService(new Intent(context, UploadService.class));
-
         }
-
         return count;
     }
 
@@ -449,27 +447,26 @@ public final class UploadProvider extends ContentProvider {
     }
 
     private Cursor queryRequestHeaders(SQLiteDatabase db, Uri uri) {
-        String where = UploadContract.RequestContent.COLUMN_DOWNLOAD_ID + "="
+        String where = UploadContract.RequestContent.COLUMN_UPLOAD_ID + "="
                 + uri.getPathSegments().get(1);
-        String[] projection = new String[]{UploadContract.RequestContent.COLUMN_HEADER,
-                UploadContract.RequestContent.COLUMN_VALUE};
+        String[] projection = new String[]{UploadContract.RequestContent.COLUMN_HEADER_NAME,
+                UploadContract.RequestContent.COLUMN_HEADER_VALUE};
         return db.query(UploadContract.RequestContent.REQUEST_CONTENT_DB_TABLE, projection, where,
                 null, null, null, null);
     }
 
     private void insertRequestHeaders(SQLiteDatabase db, long downloadId, ContentValues values) {
         ContentValues rowValues = new ContentValues();
-        rowValues.put(UploadContract.RequestContent.COLUMN_DOWNLOAD_ID, downloadId);
-        for (Map.Entry<String, Object> entry : values.valueSet()) {
-            String key = entry.getKey();
+        rowValues.put(UploadContract.RequestContent.COLUMN_UPLOAD_ID, downloadId);
+        for (String key : values.keySet()) {
             if (key.startsWith(UploadContract.RequestContent.INSERT_KEY_PREFIX)) {
-                String headerLine = entry.getValue().toString();
+                String headerLine = values.get(key).toString();
                 if (!headerLine.contains(":")) {
                     throw new IllegalArgumentException("Invalid HTTP header line: " + headerLine);
                 }
                 String[] parts = headerLine.split(":", 2);
-                rowValues.put(UploadContract.RequestContent.COLUMN_HEADER, parts[0].trim());
-                rowValues.put(UploadContract.RequestContent.COLUMN_VALUE, parts[1].trim());
+                rowValues.put(UploadContract.RequestContent.COLUMN_HEADER_NAME, parts[0].trim());
+                rowValues.put(UploadContract.RequestContent.COLUMN_HEADER_VALUE, parts[1].trim());
                 db.insert(UploadContract.RequestContent.REQUEST_CONTENT_DB_TABLE, null, rowValues);
             }
         }
@@ -481,7 +478,7 @@ public final class UploadProvider extends ContentProvider {
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 long id = cursor.getLong(0);
-                String idWhere = UploadContract.RequestContent.COLUMN_DOWNLOAD_ID + "=" + id;
+                String idWhere = UploadContract.RequestContent.COLUMN_UPLOAD_ID + "=" + id;
                 db.delete(UploadContract.RequestContent.REQUEST_CONTENT_DB_TABLE, idWhere, null);
             }
         } finally {
@@ -490,7 +487,7 @@ public final class UploadProvider extends ContentProvider {
     }
 
     private Cursor queryRequestBody(SQLiteDatabase db, Uri uri) {
-        String where = UploadContract.RequestContent.COLUMN_DOWNLOAD_ID + "="
+        String where = UploadContract.RequestContent.COLUMN_UPLOAD_ID + "="
                 + uri.getPathSegments().get(1);
         String[] projection = new String[]{UploadContract.RequestContent.COLUMN_CD_NAME,
                 UploadContract.RequestContent.COLUMN_CD_VALUE};
@@ -500,7 +497,7 @@ public final class UploadProvider extends ContentProvider {
 
     private void insertRequestBody(SQLiteDatabase db, long downloadId, ContentValues values) {
         ContentValues rowValues = new ContentValues();
-        rowValues.put(UploadContract.RequestContent.COLUMN_DOWNLOAD_ID, downloadId);
+        rowValues.put(UploadContract.RequestContent.COLUMN_UPLOAD_ID, downloadId);
         for (Map.Entry<String, Object> entry : values.valueSet()) {
             String key = entry.getKey();
             if (key.startsWith(UploadContract.RequestContent.INSERT_CD_PREFIX)) {
@@ -592,7 +589,7 @@ public final class UploadProvider extends ContentProvider {
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_ERROR_MSG + " TEXT, " +
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_ALLOW_ROAMING + " INTEGER, " +
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_SERVER_RESPONSE + " TEXT, " +
-                                UploadContract.RequestContent.COLUMN_COOKIE_DATA + " TEXT, " +
+                                UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME + " TEXT, " +
                                 UploadContract.RequestContent.COLUMN_USER_AGENT + " TEXT, " +
                                 UploadContract.RequestContent.COLUMN_REFERER + " TEXT" + ");"
                         );
@@ -607,9 +604,9 @@ public final class UploadProvider extends ContentProvider {
                 db.execSQL("DROP TABLE IF EXISTS " + UploadContract.RequestContent.REQUEST_CONTENT_DB_TABLE);
                 db.execSQL("CREATE TABLE " + UploadContract.RequestContent.REQUEST_CONTENT_DB_TABLE + "(" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        UploadContract.RequestContent.COLUMN_DOWNLOAD_ID + " INTEGER NOT NULL," +
-                        UploadContract.RequestContent.COLUMN_HEADER + " TEXT," +
-                        UploadContract.RequestContent.COLUMN_VALUE + " TEXT," +
+                        UploadContract.RequestContent.COLUMN_UPLOAD_ID + " INTEGER NOT NULL," +
+                        UploadContract.RequestContent.COLUMN_HEADER_NAME + " TEXT," +
+                        UploadContract.RequestContent.COLUMN_HEADER_VALUE + " TEXT," +
                         UploadContract.RequestContent.COLUMN_CD_NAME + " TEXT," +
                         UploadContract.RequestContent.COLUMN_CD_VALUE + " TEXT" +
                         ");");
@@ -622,7 +619,6 @@ public final class UploadProvider extends ContentProvider {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
         }
-
 
         /**
          * Add a column to a table using ALTER TABLE.
@@ -642,7 +638,5 @@ public final class UploadProvider extends ContentProvider {
             db.update(DB_TABLE, values, column + " is null", null);
             values.clear();
         }
-
-
     }
 }
