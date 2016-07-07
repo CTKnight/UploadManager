@@ -368,7 +368,7 @@ public class UploadManager {
         return id;
     }
 
-    public int markRowDeleted(long... ids) {
+    public int remove(long... ids) {
         if (ids == null || ids.length == 0) {
             // called with nothing to remove!
             throw new IllegalArgumentException("input param 'ids' can't be null");
@@ -384,10 +384,6 @@ public class UploadManager {
         // TODO: 2016/2/5 use bulkinsert() instead
         return mResolver.update(mBaseUri, values, getWhereClauseForIds(ids),
                 getWhereArgsForIds(ids));
-    }
-
-    public int remove(long... ids) {
-        return markRowDeleted(ids);
     }
 
     public Cursor query(Query query) {
@@ -687,7 +683,7 @@ public class UploadManager {
          * Content-Disposition: form-data; name="file"; filename="sum.docx"
          * Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
          *
-         * where name = "file" and "file" is field name.
+         * where name = "file" the "file" is field name.
          */
         public Request setDataFieldName(String dataFieldName) {
             mDataFieldName = dataFieldName;
