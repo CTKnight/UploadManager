@@ -1,4 +1,4 @@
-# UploadManager
+# UploadManager (Alpha)
 A Multipart upload solution, including notification and network change.
 This is a project based on AOSP DownloadManager, I implement this using Okhttp3.
 
@@ -44,4 +44,13 @@ This is a project based on AOSP DownloadManager, I implement this using Okhttp3.
 
 This project already add `consumerProguardFiles`, so feel free to use proguard.
 
+## how to get a binary
 
+
+Sorry but at this moment you have to build one from this source,
+I will build one as soon as API is stable.
+
+## License
+`
+
+`

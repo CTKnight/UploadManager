@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016 Lai Jiwwen <alanljw12345@gmail.com>
- * All Rights Reserved.
+ * Copyright (c) 2016.  All rights reserved. Lai Jiewen <alanljw12345@gmail,com
  */
 
 package me.ctknight.uploadmanager;

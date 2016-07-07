@@ -1,7 +1,9 @@
 
+/*
+ * Copyright (c) 2016.  All rights reserved. Lai Jiewen <alanljw12345@gmail,com
+ */
+
 package me.ctknight.uploadmanager.util;
-/* Copyright (c) 2016 Lai Jiewen <alanljw12345@gmail.com>
-All Rights Reserved. */
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -14,7 +16,9 @@ import java.io.File;
 
 import me.ctknight.uploadmanager.UploadManager;
 
-import static me.ctknight.uploadmanager.UploadManager.*;
+import static me.ctknight.uploadmanager.UploadManager.COLUMN_FILE_URI;
+import static me.ctknight.uploadmanager.UploadManager.COLUMN_MEDIA_TYPE;
+import static me.ctknight.uploadmanager.UploadManager.COLUMN_REMOTE_URI;
 
 public class OpenHelper {
     public static final String TAG = "OpenHelper";

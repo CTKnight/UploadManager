@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016 Zhang Hai <Dreaming.in.Code.ZH@Gmail.com>
- * All Rights Reserved.
+ * Copyright (c) 2016.  All rights reserved. Lai Jiewen <alanljw12345@gmail,com
  */
 
 package me.ctknight.uploadmanager.util;
@@ -24,6 +23,9 @@ public class IoUtils {
 
     private static final String STRING_DELIMITER_REGEX = "\\|";
 
+
+    private IoUtils() {
+    }
 
     public static void close(Closeable closeable) {
         try {
@@ -157,9 +159,6 @@ public class IoUtils {
 
 
     public interface Stringifier<T> {
-        public String stringify(T object);
+        String stringify(T object);
     }
-
-
-    private IoUtils() {}
 }

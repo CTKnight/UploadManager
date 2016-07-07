@@ -1,12 +1,8 @@
 /*
- * Copyright (c) 2016 Zhang Hai <Dreaming.in.Code.ZH@Gmail.com>
- * All Rights Reserved.
+ * Copyright (c) 2016.  All rights reserved. Lai Jiewen <alanljw12345@gmail,com
  */
 
 package me.ctknight.uploadmanager.util;
-
-//Copyright(c)2016 Lai Jiewen<alanljw12345@gmail.com>
-//        All Rights Reserved.
 
 public class LogUtils {
 
