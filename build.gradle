@@ -28,11 +28,13 @@ android {
 
 ext {
     supportVersion = "25.0.0"
+    okHttpVersion = "3.4.2"
+    stethoVersion = "1.4.1"
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile "com.android.support:appcompat-v7:${supportVersion}"
-    compile 'com.squareup.okhttp3:okhttp:3.4.2'
-    debugCompile 'com.facebook.stetho:stetho-okhttp3:1.3.1'
+    compile "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    debugCompile "com.facebook.stetho:stetho-okhttp3:${stethoVersion}"
 }
