@@ -6,7 +6,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         minSdkVersion 14
@@ -27,14 +27,12 @@ android {
 }
 
 ext {
-    supportVersion = "25.0.0"
-    okHttpVersion = "3.4.2"
-    stethoVersion = "1.4.1"
+    supportVersion = "25.1.1"
+    okHttpVersion = "3.6.0"
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile "com.android.support:appcompat-v7:${supportVersion}"
     compile "com.squareup.okhttp3:okhttp:${okHttpVersion}"
-    debugCompile "com.facebook.stetho:stetho-okhttp3:${stethoVersion}"
 }
