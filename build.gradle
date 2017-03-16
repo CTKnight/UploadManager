@@ -6,7 +6,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         minSdkVersion 14
@@ -27,7 +27,7 @@ android {
 }
 
 ext {
-    supportVersion = "25.0.0"
+    supportVersion = "25.3.0"
     okHttpVersion = "3.4.2"
     stethoVersion = "1.4.1"
 }
