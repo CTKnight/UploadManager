@@ -28,7 +28,7 @@ android {
 
 ext {
     supportVersion = "25.3.0"
-    okHttpVersion = "3.4.2"
+    okHttpVersion = "3.6.0"
     stethoVersion = "1.4.1"
 }
 
