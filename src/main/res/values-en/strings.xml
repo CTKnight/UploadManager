@@ -1,0 +1,63 @@
+<!--
+  ~ Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+  -->
+
+<resources xmlns:xliff="http://schemas.android.com/tools">
+    <string name="app_name">UploadManager</string>
+
+    <string name="upload_unknown_upload_title">Unknown title</string>
+    <string name="upload_no_application_title">No app for opening this kind of file</string>
+    <string name="upload_remaining">
+        <xliff:g id="DURATION" example="3 minutes">%s</xliff:g>
+        remaining
+    </string>
+    <string name="notification_waiting_for_suitable_network">Waiting for suitable network or retry</string>
+    <string name="notification_upload_successfully">Upload successfully</string>
+    <string name="notification_upload_unsuccessfully">Upload failed</string>
+    <string name="notification_upload_file_not_found">File does not exists</string>
+    <string name="notification_action_redo">Retry</string>
+    <string name="notification_action_cancel">Cancel</string>
+    <string name="delete_confirm_dialog_title">Deletion confirmed？</string>
+    <string name="delete_confirm_dialog_message">All Downloaded files will be deleted, uploaded files will not.</string>
+    <string name="delete_confirm_positive_button">Confirm</string>
+    <string name="delete_confirm_negative_button">Cancel</string>
+    <plurals name="notif_summary_active">
+        <item quantity="one">Uploading 1 file</item>
+        <item quantity="other">Uploading <xliff:g id="number">%d</xliff:g> files</item>
+    </plurals>
+    <plurals name="notif_summary_waiting">
+        <item quantity="one">1 file is waiting for uploading</item>
+        <item quantity="other"><xliff:g id="number">%d</xliff:g> files are waiting for uploading</item>
+    </plurals>
+    <plurals name="notif_summary_failed">
+        <item quantity="one">Failed to upload 1 file</item>
+        <item quantity="other">Failed to upload
+            <xliff:g id="number">%d</xliff:g>
+            files
+        </item>
+    </plurals>
+
+    <plurals name="duration_seconds">
+        <item quantity="one">1 秒</item>
+        <item quantity="other">
+            <xliff:g id="count">%d</xliff:g>
+            秒
+        </item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes [CHAR LIMIT=16] -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 分钟</item>
+        <item quantity="other">
+            <xliff:g id="count">%d</xliff:g>
+            分钟
+        </item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours [CHAR LIMIT=16] -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 小时</item>
+        <item quantity="other">
+            <xliff:g id="count">%d</xliff:g>
+            小时
+        </item>
+    </plurals>
+</resources>

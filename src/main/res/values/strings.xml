@@ -14,8 +14,8 @@
     <string name="notification_upload_successfully">上传成功</string>
     <string name="notification_upload_unsuccessfully">上传失败</string>
     <string name="notification_upload_file_not_found">文件不存在</string>
-    <string name="notification_action_redo"></string>
-    <string name="notification_action_cancel"></string>
+    <string name="notification_action_redo">重试</string>
+    <string name="notification_action_cancel">取消</string>
     <string name="delete_confirm_dialog_title">确认删除？</string>
     <string name="delete_confirm_dialog_message">所选中的文件中，已下载文件将被删除，上传的文件将被保留。</string>
     <string name="delete_confirm_positive_button">确认</string>
