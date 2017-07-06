@@ -92,10 +92,10 @@ public class UploadReceiver extends BroadcastReceiver {
             openUploadFile(id);
             hideNotification(id);
 
-        } else if (UploadContract.ACTION_MANUAL_REDO.equals(action)) {
+        } else if (UploadContract.ACTION_CANCEL.equals(action)) {
             final long id = ContentUris.parseId(intent.getData());
             cancelUpload(id);
-        } else if (UploadContract.ACTION_CANCEL.equals(action)) {
+        } else if (UploadContract.ACTION_MANUAL_REDO.equals(action)) {
             final long id = ContentUris.parseId(intent.getData());
             redoUpload(id);
         }

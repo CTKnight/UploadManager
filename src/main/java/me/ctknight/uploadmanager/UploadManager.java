@@ -54,7 +54,6 @@ import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_
 import static me.ctknight.uploadmanager.UploadContract.isStatusError;
 
 
-
 public class UploadManager {
 
     /**
@@ -119,14 +118,14 @@ public class UploadManager {
     /**
      * Provides more detail on the status of the upload.  Its meaning depends on the value of
      * {@link #COLUMN_STATUS}.
-     *
+     * <p>
      * When {@link #COLUMN_STATUS} is { #STATUS_FAILED}, this indicates the type of error that
      * occurred.  If an HTTP error occurred, this will hold the HTTP status code as defined in RFC
      * 2616.  Otherwise, it will hold one of the ERROR_* constants.
-     *
+     * <p>
      * When {@link #COLUMN_STATUS} is { #STATUS_PAUSED}, this indicates why the upload is
      * paused.  It will hold one of the PAUSED_* constants.
-     *
+     * <p>
      * If {@link #COLUMN_STATUS} is neither { #STATUS_FAILED} nor { #STATUS_PAUSED}, this
      * column's value is undefined.
      *
@@ -170,6 +169,11 @@ public class UploadManager {
      * Value of {@link #COLUMN_STATUS} when the upload has failed (and will not be retried).
      */
     public final static int STATUS_FAILED = 1 << 4;
+
+    /**
+     * Value of {@link #COLUMN_STATUS} when the upload has failed (and will not be retried).
+     */
+    public final static int STATUS_CANCELLED = 1 << 5;
 
     /**
      * Value of COLUMN_ERROR_CODE when the upload has completed with an error that doesn't fit
@@ -446,8 +450,8 @@ public class UploadManager {
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS));
-                if (status != STATUS_SUCCESSFUL && status != STATUS_FAILED && status != STATUS_PENDING) {
-                    throw new IllegalArgumentException("Cannot restart incomplete download: "
+                if (status != STATUS_FAILED && status != STATUS_CANCELLED) {
+                    throw new IllegalArgumentException("Cannot restart incomplete upload: "
                             + cursor.getLong(cursor.getColumnIndex(COLUMN_ID)));
                 }
             }
@@ -680,7 +684,7 @@ public class UploadManager {
          * ------WebKitFormBoundary6naClQj9yERx1WNV
          * Content-Disposition: form-data; name="file"; filename="sum.docx"
          * Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-         *
+         * <p>
          * where name = "file" the "file" is field name.
          */
         public Request setDataFieldName(String dataFieldName) {
@@ -744,10 +748,10 @@ public class UploadManager {
             if (fullPath != null) {
                 mFilename = fullPath;
             } else {
-            UriUtils.OpenableInfo info = UriUtils.queryOpenableInfo(uri, mContext);
-            if (info != null) {
-                mFilename = info.getDisplayName();
-            }
+                UriUtils.OpenableInfo info = UriUtils.queryOpenableInfo(uri, mContext);
+                if (info != null) {
+                    mFilename = info.getDisplayName();
+                }
             }
         }
 
@@ -1010,14 +1014,13 @@ public class UploadManager {
                     return STATUS_RUNNING;
 
                 case STATUS_PAUSED:
-                case WAITING_TO_RETRY:
-                case WAITING_FOR_NETWORK:
-                case WAITING_FOR_WIFI:
                     return STATUS_PAUSED;
 
                 case SUCCESS:
                     return STATUS_SUCCESSFUL;
-
+                case WAITING_TO_RETRY:
+                case WAITING_FOR_NETWORK:
+                case WAITING_FOR_WIFI:
                 default:
                     assert isStatusError(status);
                     return STATUS_FAILED;
