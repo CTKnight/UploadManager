@@ -23,6 +23,7 @@ import me.ctknight.uploadmanager.util.OpenHelper;
 
 public class UploadReceiver extends BroadcastReceiver {
     private static Handler sAsyncHandler;
+    private static Context context;
 
     static {
         final HandlerThread thread = new HandlerThread("UploadReceiver");
@@ -42,28 +43,31 @@ public class UploadReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
 
         final String action = intent.getAction();
+        UploadReceiver.context = context.getApplicationContext();
         if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
             final ConnectivityManager connManager = (ConnectivityManager) context.
                     getSystemService(Context.CONNECTIVITY_SERVICE);
             final NetworkInfo info = connManager.getActiveNetworkInfo();
             if (info != null && info.isConnected()) {
-                startService(context);
+                startService();
             }
         } else if (UploadContract.ACTION_RETRY.equals(action)) {
-            startService(context);
+            startService();
         } else if (UploadContract.ACTION_LIST.equals(action)
                 || UploadContract.ACTION_HIDE.equals(action)
-                || UploadContract.ACTION_OPEN.equals(action)) {
+                || UploadContract.ACTION_OPEN.equals(action)
+                || UploadContract.ACTION_MANUAL_REDO.equals(action)
+                || UploadContract.ACTION_CANCEL.equals(action)) {
 
             final PendingResult result = goAsync();
             if (result == null) {
-                handleNotificationBroadcast(context, intent);
+                handleNotificationBroadcast(intent);
 
             } else {
                 sAsyncHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        handleNotificationBroadcast(context, intent);
+                        handleNotificationBroadcast(intent);
                         result.finish();
                     }
                 });
@@ -72,31 +76,48 @@ public class UploadReceiver extends BroadcastReceiver {
 
     }
 
-    private void handleNotificationBroadcast(Context context, Intent intent) {
+    private static void handleNotificationBroadcast(Intent intent) {
         final String action = intent.getAction();
         if (UploadContract.ACTION_LIST.equals(action)) {
             final long[] ids = intent.getLongArrayExtra(
                     UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS);
             // TODO: 2016/2/18 add this in API doc.
-            sendNotificationClickIntent(context, ids);
+            sendNotificationClickIntent(ids);
         } else if (UploadContract.ACTION_HIDE.equals(action)) {
             final long id = ContentUris.parseId(intent.getData());
-            hideNotification(context, id);
+            hideNotification(id);
 
         } else if (UploadContract.ACTION_OPEN.equals(action)) {
             final long id = ContentUris.parseId(intent.getData());
-            openUploadFile(context, id);
-            hideNotification(context, id);
+            openUploadFile(id);
+            hideNotification(id);
 
+        } else if (UploadContract.ACTION_MANUAL_REDO.equals(action)) {
+            final long id = ContentUris.parseId(intent.getData());
+            cancelUpload(id);
+        } else if (UploadContract.ACTION_CANCEL.equals(action)) {
+            final long id = ContentUris.parseId(intent.getData());
+            redoUpload(id);
         }
     }
 
-    private void hideNotification(Context context, long id) {
+    private static void cancelUpload(long id) {
+        UploadManager.getUploadManger(context).remove(id);
+    }
+
+    private static void redoUpload(long id) {
+        UploadManager.getUploadManger(context).restartUpload(id);
+    }
+
+    private static void hideNotification(long id) {
         final int status;
         final int visibility;
 
         final Uri uri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, id);
         final Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+        if (cursor == null) {
+            return;
+        }
         try {
             if (cursor.moveToFirst()) {
                 status = getInt(cursor, UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS);
@@ -122,14 +143,14 @@ public class UploadReceiver extends BroadcastReceiver {
      * Start activity to display the file represented by the given
      * {@link me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS#_ID}.
      */
-    private void openUploadFile(Context context, long id) {
+    private static void openUploadFile(long id) {
         if (!OpenHelper.startViewIntent(context, id, Intent.FLAG_ACTIVITY_NEW_TASK)) {
             Toast.makeText(context, R.string.upload_no_application_title, Toast.LENGTH_SHORT)
                     .show();
         }
     }
 
-    private void sendNotificationClickIntent(Context context, long[] ids) {
+    private static void sendNotificationClickIntent(long[] ids) {
         final String packageName;
         final String clazz;
 
@@ -137,6 +158,9 @@ public class UploadReceiver extends BroadcastReceiver {
                 UploadContract.UPLOAD_URIS.CONTENT_URI, ids[0]);
         final Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
 
+        if (cursor == null) {
+            return;
+        }
         try {
             if (cursor.moveToFirst()) {
                 packageName = getString(cursor, UploadContract.UPLOAD_COLUMNS.COLUMN_NOTIFICATION_PACKAGE);
@@ -149,7 +173,7 @@ public class UploadReceiver extends BroadcastReceiver {
             cursor.close();
         }
 
-        Intent appIntent = null;
+
         if (TextUtils.isEmpty(clazz)) {
             Log.w("UploadReceiver", "Missing class;skipping broadcast");
             return;
@@ -158,7 +182,7 @@ public class UploadReceiver extends BroadcastReceiver {
             return;
         }
 
-        appIntent = new Intent(UploadManager.ACTION_NOTIFICATION_CLICKED);
+        Intent appIntent = new Intent(UploadManager.ACTION_NOTIFICATION_CLICKED);
         appIntent.setClassName(packageName, clazz);
         appIntent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS, ids);
 
@@ -171,7 +195,7 @@ public class UploadReceiver extends BroadcastReceiver {
         context.sendBroadcast(appIntent);
     }
 
-    private void startService(Context context) {
+    private static void startService() {
         context.startService(new Intent(context, UploadService.class));
     }
 }

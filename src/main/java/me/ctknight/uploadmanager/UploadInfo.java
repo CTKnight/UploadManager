@@ -71,7 +71,7 @@ public class UploadInfo {
     private UploadThread mTask;
 
     public UploadInfo(Context context, UploadNotifier notifier) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mNotifier = notifier;
     }
 

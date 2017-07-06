@@ -12,12 +12,13 @@ public final class UploadContract {
     public static final String ACTION_OPEN = "me.ctknight.uploadmanager.action.UPLOAD_OPEN";
     public static final String ACTION_LIST = "me.ctknight.uploadmanager.action.UPLOAD_LIST";
     public static final String ACTION_RETRY = "me.ctknight.uploadmanager.action.UPLOAD_RETRY";
+    // redo is manually triggered by
+    public static final String ACTION_MANUAL_REDO = "me.ctknight.uploadmanager.action.UPLOAD_REDO";
+    public static final String ACTION_CANCEL = "me.ctknight.uploadmanager.action.UPLOAD_CANCEL";
     public static final String ACTION_HIDE = "me.ctknight.uploadmanager.action.UPLOAD_HIDE";
 
     public static boolean isOnGoing(UploadInfo upload) {
-        return upload.mStatus == UPLOAD_STATUS.RUNNING ||
-                upload.mStatus == UPLOAD_STATUS.PENDING;
-        //AOSP doesn't have STATUS_PENDING, but I think STATUS_PENDING is a kind of ongoing.
+        return upload.mStatus == UPLOAD_STATUS.RUNNING;
     }
 
     public static boolean isComplete(UploadInfo upload) {

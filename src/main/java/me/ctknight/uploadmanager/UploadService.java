@@ -40,6 +40,7 @@ public class UploadService extends Service {
     private static final int MSG_UPDATE = 1;
     private static final int MSG_FINAL_UPDATE = 2;
     private static final String TAG = LogUtils.makeTag(UploadService.class);
+    // don't use LongSparseArray, it can't get keys' collection
     private final Map<Long, UploadInfo> mUploads = new HashMap<>();
     private AlarmManager mAlarmManager;
     private UploadManagerContentObserver mObserver;
@@ -107,8 +108,8 @@ public class UploadService extends Service {
     };
 
     private static ExecutorService buildUploadExecutor() {
+        // it's the up limit set by cluster notification
         final int maxConcurrent = 5;
-        // TODO: 2015/11/20 concurrent num should be set by client
 
         final ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 maxConcurrent, maxConcurrent, 10, TimeUnit.SECONDS,
@@ -164,8 +165,6 @@ public class UploadService extends Service {
         mObserver = new UploadManagerContentObserver();
         getContentResolver().registerContentObserver(UploadContract.UPLOAD_URIS.CONTENT_URI,
                 true, mObserver);
-
-        // TODO: 2015/11/20 add JobScheduler to do some cleanup job.
     }
 
     @Override
@@ -217,6 +216,9 @@ public class UploadService extends Service {
         final Cursor cursor = resolver.query(UploadContract.UPLOAD_URIS.CONTENT_URI,
                 null, UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY + " != " + UploadContract.VISIBILITY_STATUS.HIDDEN_COMPLETE,
                 null, null);
+        if (cursor == null) {
+            return false;
+        }
         try {
             UploadInfo.Reader reader = new UploadInfo.Reader(resolver, cursor);
             final int idColumn = cursor.getColumnIndexOrThrow(UploadContract.UPLOAD_COLUMNS._ID);

@@ -42,9 +42,9 @@ public class UploadNotifier {
 
     private final HashMap<String, Long> mActiveNotif = new HashMap<>();
 
-    private final LongSparseArray<Long> mUploadSpeed = new LongSparseArray<Long>();
+    private final LongSparseArray<Long> mUploadSpeed = new LongSparseArray<>();
 
-    private final LongSparseArray<Long> mUploadTouch = new LongSparseArray<Long>();
+    private final LongSparseArray<Long> mUploadTouch = new LongSparseArray<>();
     //In AOSP Download Notifier,they use LongSparseLongArray,
     //actually,LongSparseArray is a generic version of LongSparseLongArray,
     //so LongSparseArray<Long> is totally same with LongSparseLongArray.
@@ -65,6 +65,7 @@ public class UploadNotifier {
     }
 
     private static String buildNotificationTag(UploadInfo info) {
+        // waiting and active is clustered
         if (UploadContract.isWaiting(info)) {
             return TYPE_WAITING + ":" + mContext.getPackageName();
         } else if (UploadContract.isOnGoing(info)) {
@@ -152,6 +153,9 @@ public class UploadNotifier {
             }
 
             // Build action intents
+            // add action by type
+            // active -> cancel
+            // fail waiting -> retry
             if (type == TYPE_ACTIVE || type == TYPE_WAITING) {
                 final Uri uri = new Uri.Builder().scheme("active-dl").appendPath(tag).build();
                 final Intent intent = new Intent(UploadContract.ACTION_LIST,
@@ -161,6 +165,25 @@ public class UploadNotifier {
                 builder.setContentIntent(PendingIntent.getBroadcast(mContext,
                         9, intent, PendingIntent.FLAG_UPDATE_CURRENT));
                 builder.setOngoing(true);
+
+                final UploadInfo info = cluster.iterator().next();
+                if (type == TYPE_ACTIVE) {
+                    final Uri idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);
+                    final Intent actionIntent = new Intent(UploadContract.ACTION_CANCEL,
+                            idUri, mContext, UploadReceiver.class);
+                    builder.addAction(R.drawable.ic_clear_black_24dp,
+                            mContext.getString(R.string.notification_action_cancel),
+                            PendingIntent.getBroadcast(mContext, 0, actionIntent, 0));
+                } else {
+                    // WAITING
+                    final Uri idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);
+                    final Intent actionIntent = new Intent(UploadContract.ACTION_MANUAL_REDO,
+                            idUri, mContext, UploadReceiver.class);
+                    builder.addAction(R.drawable.ic_redo_black_24dp,
+                            mContext.getString(R.string.notification_action_redo),
+                            PendingIntent.getBroadcast(mContext, 0, actionIntent, 0));
+                }
+
             } else if (type == TYPE_COMPLETE) {
                 final UploadInfo info = cluster.iterator().next();
                 final Uri uri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);

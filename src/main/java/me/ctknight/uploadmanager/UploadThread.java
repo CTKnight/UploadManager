@@ -62,6 +62,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     // global setting
     private final UploadInfoDelta mInfoDelta;
     private Call mCall;
+    // upload has started or not
     private boolean mMadeProgress = false;
     private long mLastUpdateBytes = 0;
     private long mLastUpdateTime = 0;
@@ -72,7 +73,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     private long mSpeedSampleBytes;
 
     public UploadThread(Context context, UploadNotifier notifier, UploadInfo info) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mNotifier = notifier;
 
         mId = info.mId;
@@ -105,7 +106,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
         final ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (UploadInfo.queryUploadStatus(mContext.getContentResolver(), mId) == SUCCESS) {
-//            Log.d("UploadThread", "run: " + "skipping finished item");
+            Log.d("UploadThread", "run: " + "skipping finished item id: " + mId);
             return;
         }
 
@@ -113,7 +114,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
         final PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
 
         try {
-            wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UploadThread");
+            wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UploadThread" + mId);
             wakelock.acquire();
 
 //            Log.d("UploadThread", "run: starting");
@@ -209,11 +210,9 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
         try {
             updateProgress();
             if (checkDeletedOrCanceled()) {
-                throw new UploadException("Upload canceled");
+                throw new UploadCancelException("Upload canceled");
             }
 
-//            checkConnectivity();
-            // TODO: 2016/2/16 check ongoing status
         } catch (IOException | UploadException e) {
             mCall.cancel();
 
@@ -225,10 +224,6 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     private void executeUpload() throws UploadException, IOException {
 
         URL url;
-
-        checkConnectivity();
-
-        checkDeletedOrCanceled();
 
         try {
             url = new URL(mInfoDelta.mTargetUrl);

@@ -446,7 +446,7 @@ public class UploadManager {
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS));
-                if (status != STATUS_SUCCESSFUL && status != STATUS_FAILED) {
+                if (status != STATUS_SUCCESSFUL && status != STATUS_FAILED && status != STATUS_PENDING) {
                     throw new IllegalArgumentException("Cannot restart incomplete download: "
                             + cursor.getLong(cursor.getColumnIndex(COLUMN_ID)));
                 }
@@ -458,7 +458,6 @@ public class UploadManager {
         ContentValues values = new ContentValues();
         values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_CURRENT_BYTES, 0);
         values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES, -1);
-        values.putNull(UploadContract.UPLOAD_COLUMNS._DATA);
         values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS, UploadContract.UPLOAD_STATUS.PENDING);
         values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_NUM_FAILED, 0);
         mResolver.update(mBaseUri, values, getWhereClauseForIds(ids), getWhereArgsForIds(ids));
