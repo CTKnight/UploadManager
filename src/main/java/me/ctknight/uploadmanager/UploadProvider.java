@@ -429,8 +429,9 @@ public final class UploadProvider extends ContentProvider {
                         new String[]{getUploadIdFromUri(uri)}, null);
                 if (cursor.moveToFirst()) {
                     String fileUri = cursor.getString(0);
-                    getContext().getContentResolver().openFileDescriptor(Uri.parse(fileUri), mode);
+                    return getContext().getContentResolver().openFileDescriptor(Uri.parse(fileUri), mode);
                 }
+                // if not, fall through
             }
             default:
                 return null;
