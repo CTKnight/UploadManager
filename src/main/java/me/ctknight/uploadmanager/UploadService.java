@@ -19,6 +19,7 @@ import android.os.Message;
 import android.os.Process;
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -72,7 +73,7 @@ public class UploadService extends Service {
                 for (Map.Entry<Thread, StackTraceElement[]> entry :
                         Thread.getAllStackTraces().entrySet()) {
                     if (entry.getKey().getName().startsWith("pool")) {
-//                        Log.d(TAG, entry.getKey() + ": " + Arrays.toString(entry.getValue()));
+                        Log.d(TAG, entry.getKey() + ": " + Arrays.toString(entry.getValue()));
                     }
                 }
 
