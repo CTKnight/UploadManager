@@ -221,7 +221,7 @@ public class UploadService extends Service {
             return false;
         }
         try {
-            UploadInfo.Reader reader = new UploadInfo.Reader(resolver, cursor);
+            UploadInfo.Reader reader = new UploadInfo.Reader(this, cursor);
             final int idColumn = cursor.getColumnIndexOrThrow(UploadContract.UPLOAD_COLUMNS._ID);
             while (cursor.moveToNext()) {
                 final long id = cursor.getLong(idColumn);

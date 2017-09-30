@@ -23,6 +23,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import me.ctknight.uploadmanager.util.FileUtils;
 import me.ctknight.uploadmanager.util.LogUtils;
 
 import static me.ctknight.uploadmanager.util.NetworkUtils.isConnected;
@@ -258,9 +259,11 @@ public class UploadInfo {
     public static class Reader {
         private ContentResolver mResolver;
         private Cursor mCursor;
+        private Context mContext;
 
-        public Reader(ContentResolver resolver, Cursor cursor) {
-            mResolver = resolver;
+        public Reader(Context context, Cursor cursor) {
+            mContext = context.getApplicationContext();
+            mResolver = mContext.getContentResolver();
             mCursor = cursor;
         }
 
@@ -308,6 +311,7 @@ public class UploadInfo {
             info.mId = getLong(UploadContract.UPLOAD_COLUMNS._ID);
             info.mTargetUrl = getString(UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL);
             info.mFileUri = getString(UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI);
+            info.mFileName = FileUtils.getFile(mContext, Uri.parse(info.mFileUri)).getName();
             info.mUid = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_UID);
             info.mMimeType = normalizeMimeType(getString(UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE));
             info.mVisibility = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY);

@@ -10,10 +10,12 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Debug;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.util.DebugUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -319,7 +321,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     }
 
     private void recordResponse(String responseMsg) {
-//        Log.d(TAG, "executeUpload: " + responseMsg);
+        Log.d(TAG, "executeUpload: " + responseMsg);
         mInfoDelta.mServerResponse = responseMsg;
         mInfoDelta.writeToDatabase();
     }
