@@ -35,7 +35,6 @@ import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_MIM
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY;
-import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS._DATA;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.CANNOT_RESUME;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.DEVICE_NOT_FOUND_ERROR;
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.FILE_ERROR;
@@ -102,11 +101,6 @@ public class UploadManager {
      * generated URI once the upload has started.
      */
     public final static String COLUMN_LOCAL_URI = "localuri";
-
-    /**
-     * The pathname of the file where the upload is stored.
-     */
-    public final static String COLUMN_LOCAL_FILENAME = UploadContract.UPLOAD_COLUMNS._DATA;
 
     /**
      * Current status of the upload, as one of the * constants.
@@ -304,7 +298,6 @@ public class UploadManager {
      */
     public static final String[] UNDERLYING_COLUMNS = new String[]{
             BaseColumns._ID,
-            _DATA + " AS " + COLUMN_LOCAL_FILENAME,
             COLUMN_TITLE,
             COLUMN_DESCRIPTION,
             COLUMN_STATUS,
@@ -709,10 +702,9 @@ public class UploadManager {
             }
             //NOTE: if you change items here , you should also go to UploadProvider and add them in filteredValue.
             updateFilename(mFileUri);
-            putIfNonNull(values, COLUMN_LOCAL_FILENAME, mFilename);
             putIfNonNull(values, COLUMN_FILE_URI, mFileUri);
             putIfNonNull(values, COLUMN_MIME_TYPE, mMimeType == null ? mContext.getContentResolver().getType(mFileUri) : mMimeType);
-            putIfNonNull(values, COLUMN_TITLE, new File(mFilename).getName());
+            putIfNonNull(values, COLUMN_TITLE, mFilename);
             putIfNonNull(values, COLOMN_DATA_FIELD_NAME, mDataFieldName == null ? "file" : mDataFieldName);
             //use filename as default title.
             putIfNonNull(values, COLUMN_TITLE, mTitle);
@@ -746,7 +738,7 @@ public class UploadManager {
         public void updateFilename(Uri uri) {
             String fullPath = FileUtils.getPath(mContext, uri);
             if (fullPath != null) {
-                mFilename = fullPath;
+                mFilename = new File(fullPath).getName();
             } else {
                 UriUtils.OpenableInfo info = UriUtils.queryOpenableInfo(uri, mContext);
                 if (info != null) {
@@ -901,7 +893,7 @@ public class UploadManager {
     }
 
     /**
-     * This class wraps a cursor returned by DownloadProvider -- the "underlying cursor" -- and
+     * This class wraps a cursor returned by UploadProvider -- the "underlying cursor" -- and
      * presents a different set of columns, those defined in the DownloadManager.COLUMN_*
      * constants.
      * Some columns correspond directly to underlying values while others are computed from
@@ -938,7 +930,7 @@ public class UploadManager {
         }
 
         private String getLocalUri() {
-            // return content URI for cache download
+            // return content URI for cache upload
             long uploadId = getLong(getColumnIndex(UploadContract.UPLOAD_COLUMNS._ID));
             return ContentUris.withAppendedId(mBaseUri, uploadId).toString();
         }

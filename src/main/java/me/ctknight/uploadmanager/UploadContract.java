@@ -100,7 +100,7 @@ public final class UploadContract {
     }
 
     public static final class UPLOAD_COLUMNS implements android.provider.BaseColumns {
-        public static final String _DATA = "_data";
+//        public static final String _DATA = "_data";
         //FileName
         public static final String COLUMN_TARGET_URL = "url";
         public static final String COLUMN_FILE_URI = "uri";

@@ -309,7 +309,6 @@ public class UploadInfo {
             info.mTargetUrl = getString(UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL);
             info.mFileUri = getString(UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI);
             info.mUid = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_UID);
-            info.mFileName = getString(UploadContract.UPLOAD_COLUMNS._DATA);
             info.mMimeType = normalizeMimeType(getString(UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE));
             info.mVisibility = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY);
             info.mStatus = getInt(UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS);

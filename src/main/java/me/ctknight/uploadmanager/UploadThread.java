@@ -281,7 +281,7 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
     private RequestBody buildRequestBody() throws IOException {
         CountingInputStreamMultipartBody.Builder builder = new CountingInputStreamMultipartBody.Builder()
                 .setType(CountingInputStreamMultipartBody.FORM)
-                .addFormDataPart("file", new File(mInfo.mFileName).getName(),
+                .addFormDataPart("file", mInfo.mFileName,
                         CountingInputStreamMultipartBody.create(MediaType.parse(mInfo.mMimeType), getFileInputStream()));
         for (Map.Entry<String, String> cd : mInfo.getContentDisposition().entrySet()) {
             builder.addFormDataPart(cd.getKey(), cd.getValue());
@@ -366,7 +366,6 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
     private class UploadInfoDelta {
         public String mTargetUrl;
-        public String mFileName;
         public String mMimeType;
         public int mStatus;
         public int mNumFailed;
@@ -380,7 +379,6 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
 
         public UploadInfoDelta(UploadInfo info) {
             mTargetUrl = info.mTargetUrl;
-            mFileName = info.mFileName;
             mMimeType = info.mMimeType;
             mStatus = info.mStatus;
             mNumFailed = info.mNumFailed;
@@ -395,7 +393,6 @@ public class UploadThread implements Runnable, CountingInputStreamMultipartBody.
             final ContentValues values = new ContentValues();
 
             values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL, mTargetUrl);
-            values.put(UploadContract.UPLOAD_COLUMNS._DATA, mFileName);
             values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE, mMimeType);
             values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS, mStatus);
             values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_NUM_FAILED, mNumFailed);

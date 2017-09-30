@@ -180,7 +180,6 @@ public final class UploadProvider extends ContentProvider {
         ContentValues filteredValues = new ContentValues();
 
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL, values, filteredValues);
-        copyString(UploadContract.UPLOAD_COLUMNS._DATA, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE, values, filteredValues);
         copyString(UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME, values, filteredValues);
@@ -294,21 +293,9 @@ public final class UploadProvider extends ContentProvider {
             }
         }
 
-        String filename = values.getAsString(UploadContract.UPLOAD_COLUMNS._DATA);
-        if (filename != null) {
-            Cursor c = null;
-            try {
-                c = query(uri, new String[]
-                        {UploadContract.UPLOAD_COLUMNS.COLUMN_TITLE}, null, null, null);
-                if (!c.moveToFirst() || c.getString(0).isEmpty()) {
-                    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_TITLE, new File(filename).getName());
-                    //check empty title
-                }
-            } catch (NullPointerException e) {
-                Log.w(TAG, "update: cursor is null");
-            } finally {
-                c.close();
-            }
+        String fileUri = values.getAsString(UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI);
+        if (fileUri != null) {
+            throw new IllegalArgumentException("Uri to the file is not supposed to be changed");
         }
 
         Integer status = values.getAsInteger(UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS);
@@ -567,7 +554,6 @@ public final class UploadProvider extends ContentProvider {
                 db.execSQL
                         ("CREATE TABLE " + DB_TABLE + "(" +
                                 UploadContract.UPLOAD_COLUMNS._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                                UploadContract.UPLOAD_COLUMNS._DATA + " TEXT, " +
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL + " TEXT, " +
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI + " TEXT, " +
                                 UploadContract.UPLOAD_COLUMNS.COLUMN_UID + " INTEGER, " +
