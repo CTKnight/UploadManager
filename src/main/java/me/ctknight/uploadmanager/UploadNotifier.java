@@ -58,6 +58,12 @@ public class UploadNotifier {
         mContext = context;
         mNotifManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mNotifManager != null) {
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL,
+                    mContext.getString(R.string.notification_channel),
+                    NotificationManager.IMPORTANCE_DEFAULT);
+            mNotifManager.createNotificationChannel(channel);
+        }
     }
 
     private static CharSequence getUploadTitle(Resources res, UploadInfo info) {
@@ -327,12 +333,6 @@ public class UploadNotifier {
 
                 notification = inboxStyle.build();
 
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel channel = new NotificationChannel("notify_001",
-                        mContext.getString(R.string.notification_channel),
-                        NotificationManager.IMPORTANCE_DEFAULT);
-                mNotifManager.createNotificationChannel(channel);
             }
             mNotifManager.notify(tag, 0, notification);
 
