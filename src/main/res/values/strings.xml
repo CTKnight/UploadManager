@@ -10,6 +10,7 @@
     <string name="upload_remaining">剩余
         <xliff:g id="DURATION" example="3 minutes">%s</xliff:g>
     </string>
+    <string name="notification_channel">上传进度</string>
     <string name="notification_waiting_for_suitable_network">等待重试或合适的网络连接</string>
     <string name="notification_upload_successfully">上传成功</string>
     <string name="notification_upload_unsuccessfully">上传失败</string>

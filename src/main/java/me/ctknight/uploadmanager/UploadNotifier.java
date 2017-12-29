@@ -5,6 +5,7 @@
 package me.ctknight.uploadmanager;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentUris;
@@ -12,9 +13,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.v4.util.LongSparseArray;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -29,6 +31,8 @@ import java.util.Map;
 import me.ctknight.uploadmanager.util.TimeUtils;
 
 public class UploadNotifier {
+
+    public static final String NOTIFICATION_CHANNEL = "Upload notification";
 
     private static final int TYPE_ACTIVE = 1;
     private static final int TYPE_WAITING = 2;
@@ -128,7 +132,7 @@ public class UploadNotifier {
             final int type = getNotificationTagType(tag);
             final Collection<UploadInfo> cluster = clustered.get(tag);
 
-            final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
+            final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, NOTIFICATION_CHANNEL);
             builder.setColor(res.getColor(R.color.system_notification_accent_color));
 
             // Use time when cluster was first shown to avoid shuffling
@@ -324,7 +328,12 @@ public class UploadNotifier {
                 notification = inboxStyle.build();
 
             }
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel("notify_001",
+                        mContext.getString(R.string.notification_channel),
+                        NotificationManager.IMPORTANCE_DEFAULT);
+                mNotifManager.createNotificationChannel(channel);
+            }
             mNotifManager.notify(tag, 0, notification);
 
         }

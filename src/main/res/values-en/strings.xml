@@ -60,4 +60,5 @@
             小时
         </item>
     </plurals>
+    <string name="notification_channel">Upload progress</string>
 </resources>
