@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager;
@@ -15,8 +15,8 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
-import android.support.v4.util.LongSparseArray;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
 import android.util.Log;
 

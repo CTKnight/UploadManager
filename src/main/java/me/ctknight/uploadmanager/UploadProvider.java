@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager;
@@ -28,7 +28,6 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,18 +38,28 @@ import me.ctknight.uploadmanager.util.LogUtils;
 public final class UploadProvider extends ContentProvider {
 
     private static final String TAG = LogUtils.makeTag(UploadProvider.class);
-    /** Database filename */
+    /**
+     * Database filename
+     */
     private static final String DB_NAME = "uploads.db";
-    /** Current database version */
+    /**
+     * Current database version
+     */
     private static final int DB_VERSION = 1;
-    /** Name of table in the database */
+    /**
+     * Name of table in the database
+     */
     private static final String DB_TABLE = "uploads";
     private static final String PATH_UPLOAD = "uploads";
-    /** MIME type for the entire download list */
+    /**
+     * MIME type for the entire download list
+     */
     private static final String UPLOAD_DIR_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" +
                     UploadContract.UPLOAD_URIS.UPLOAD_AUTHORITY + "/" + PATH_UPLOAD;
-    /** MIME type for an individual download */
+    /**
+     * MIME type for an individual download
+     */
     private static final String UPLOAD_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +
                     UploadContract.UPLOAD_URIS.UPLOAD_AUTHORITY + "/" + PATH_UPLOAD;
@@ -60,7 +69,9 @@ public final class UploadProvider extends ContentProvider {
     private static final int REQUEST_HEADERS_URI = 3;
     private static final int REQUEST_CD_URI = 4;
 
-    /** URI matcher used to recognize URIs sent by applications */
+    /**
+     * URI matcher used to recognize URIs sent by applications
+     */
     private static final UriMatcher sURIMatcher = buildUriMatcher();
     private Handler mHandler;
     private DatabaseHelper mDatabaseHelper;

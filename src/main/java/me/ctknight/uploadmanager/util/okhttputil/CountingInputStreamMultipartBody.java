@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager.util.okhttputil;
@@ -123,7 +123,7 @@ public class CountingInputStreamMultipartBody extends RequestBody implements Cou
 
     /**
      * Appends a quoted-string to a StringBuilder.
-     *
+     * <p>
      * <p>RFC 2388 is rather vague about how one should escape special characters in form-data
      * parameters, and as it turns out Firefox and Chrome actually do rather different things, and
      * both say in their comments that they're not really sure what the right approach is. We go
@@ -164,7 +164,9 @@ public class CountingInputStreamMultipartBody extends RequestBody implements Cou
         return boundary.utf8();
     }
 
-    /** The number of parts in this multipart body. */
+    /**
+     * The number of parts in this multipart body.
+     */
     public int size() {
         return parts.size();
     }
@@ -177,7 +179,9 @@ public class CountingInputStreamMultipartBody extends RequestBody implements Cou
         return parts.get(index);
     }
 
-    /** A combination of {@link #type()} and {@link #boundary()}. */
+    /**
+     * A combination of {@link #type()} and {@link #boundary()}.
+     */
     @Override
     public MediaType contentType() {
         return contentType;
@@ -366,34 +370,46 @@ public class CountingInputStreamMultipartBody extends RequestBody implements Cou
             return this;
         }
 
-        /** Add a part to the body. */
+        /**
+         * Add a part to the body.
+         */
         public Builder addPart(RequestBody body) {
             return addPart(Part.create(body));
         }
 
-        /** Add a part to the body. */
+        /**
+         * Add a part to the body.
+         */
         public Builder addPart(Headers headers, RequestBody body) {
             return addPart(Part.create(headers, body));
         }
 
-        /** Add a form data part to the body. */
+        /**
+         * Add a form data part to the body.
+         */
         public Builder addFormDataPart(String name, String value) {
             return addPart(Part.createFormData(name, value));
         }
 
-        /** Add a form data part to the body. */
+        /**
+         * Add a form data part to the body.
+         */
         public Builder addFormDataPart(String name, String filename, RequestBody body) {
             return addPart(Part.createFormData(name, filename, body));
         }
 
-        /** Add a part to the body. */
+        /**
+         * Add a part to the body.
+         */
         public Builder addPart(Part part) {
             if (part == null) throw new NullPointerException("part == null");
             parts.add(part);
             return this;
         }
 
-        /** Assemble the specified parts into a request body. */
+        /**
+         * Assemble the specified parts into a request body.
+         */
         public CountingInputStreamMultipartBody build() {
             if (parts.isEmpty()) {
                 throw new IllegalStateException("Multipart body must have at least one part.");

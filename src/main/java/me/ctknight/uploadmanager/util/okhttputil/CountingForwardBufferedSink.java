@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager.util.okhttputil;/* Copyright (c) 2016 Lai Jiewen <alanljw12345@gmail.com>
@@ -45,19 +45,25 @@ public class CountingForwardBufferedSink implements BufferedSink, Sink {
         delegate.close();
     }
 
-    /** Returns the timeout for this sink. */
+    /**
+     * Returns the timeout for this sink.
+     */
     @Override
     public Timeout timeout() {
         return delegate.timeout();
     }
 
-    /** Pushes all buffered bytes to their final destination. */
+    /**
+     * Pushes all buffered bytes to their final destination.
+     */
     @Override
     public void flush() throws IOException {
         delegate.flush();
     }
 
-    /** Returns this sink's internal buffer. */
+    /**
+     * Returns this sink's internal buffer.
+     */
     @Override
     public Buffer buffer() {
         return delegate.buffer();
@@ -107,7 +113,9 @@ public class CountingForwardBufferedSink implements BufferedSink, Sink {
         return delegate.write(source);
     }
 
-    /** Returns an output stream that writes to this sink. */
+    /**
+     * Returns an output stream that writes to this sink.
+     */
     @Override
     public OutputStream outputStream() {
         return delegate.outputStream();

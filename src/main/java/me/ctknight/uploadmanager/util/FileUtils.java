@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager.util;
@@ -37,7 +37,9 @@ public class FileUtils {
     public static final String MIME_TYPE_VIDEO = "video/*";
     public static final String MIME_TYPE_APP = "application/*";
     public static final String HIDDEN_PREFIX = ".";
-    /** TAG for log messages. */
+    /**
+     * TAG for log messages.
+     */
     static final String TAG = "FileUtils";
     private static final boolean DEBUG = false; // Set to true to enable logging
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager;
@@ -62,10 +62,14 @@ public final class UploadContract {
     public static final class Constants {
 
 
-        /** The buffer size used to stream the data */
+        /**
+         * The buffer size used to stream the data
+         */
 
         public static final int BUFFER_SIZE = 8192;
-        /** The minimum amount of progress that has to be done before the progress bar gets updated */
+        /**
+         * The minimum amount of progress that has to be done before the progress bar gets updated
+         */
         public static final int MIN_PROGRESS_STEP = 65536;
         /**
          * The minimum amount of time that has to elapse before the progress bar gets updated, in
@@ -100,7 +104,7 @@ public final class UploadContract {
     }
 
     public static final class UPLOAD_COLUMNS implements android.provider.BaseColumns {
-//        public static final String _DATA = "_data";
+        //        public static final String _DATA = "_data";
         //FileName
         public static final String COLUMN_TARGET_URL = "url";
         public static final String COLUMN_FILE_URI = "uri";

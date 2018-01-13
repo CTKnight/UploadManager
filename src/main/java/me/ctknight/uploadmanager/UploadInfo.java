@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager;
@@ -269,15 +269,15 @@ public class UploadInfo {
 
         /**
          * Normalize a MIME data type.
-         *
+         * <p>
          * <p>A normalized MIME type has white-space trimmed,
          * content-type parameters removed, and is lower-case.
          * This aligns the type with Android best practices for
          * intent filtering.
-         *
+         * <p>
          * <p>For example, "text/plain; charset=utf-8" becomes "text/plain".
          * "text/x-vCard" becomes "text/x-vcard".
-         *
+         * <p>
          * <p>All MIME types received from outside Android (such as user input,
          * or external sources like Bluetooth, NFC, or the Internet) should
          * be normalized before they are used to create an Intent.
