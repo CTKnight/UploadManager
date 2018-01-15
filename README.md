@@ -49,8 +49,6 @@ This project already add `consumerProguardFiles`, so feel free to use proguard.
 
 Sorry but at this moment you have to build one from this source,
 I will build one as soon as API is stable.
-
-## License
 ```
 
 ````
