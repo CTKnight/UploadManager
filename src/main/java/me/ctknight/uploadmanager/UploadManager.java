@@ -322,6 +322,12 @@ public class UploadManager {
         mResolver = context.getApplicationContext().getContentResolver();
     }
 
+    /**
+     * The only to get a instance of UploadManager
+     * this method is thread safe
+     * @param context no need to be Application
+     * @return a singleton instance of UploadManager
+     */
     public static UploadManager getUploadManger(Context context) {
         if (mUploadManager == null) {
             synchronized (UploadManager.class) {
