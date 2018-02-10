@@ -314,7 +314,7 @@ public class UploadManager {
             "'placeholder' AS " + COLUMN_LOCAL_URI,
             "'placeholder' AS " + COLUMN_REASON
     };
-    private static UploadManager mUploadManager = null;
+    private static volatile UploadManager mUploadManager;
     private ContentResolver mResolver;
     private Uri mBaseUri = UploadContract.UPLOAD_URIS.CONTENT_URI;
 
@@ -324,7 +324,11 @@ public class UploadManager {
 
     public static UploadManager getUploadManger(Context context) {
         if (mUploadManager == null) {
-            mUploadManager = new UploadManager(context.getApplicationContext());
+            synchronized (UploadManager.class) {
+                if (mUploadManager == null) {
+                    mUploadManager = new UploadManager(context.getApplicationContext());
+                }
+            }
         }
         return mUploadManager;
     }
