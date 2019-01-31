@@ -1,38 +1,24 @@
-/*
- * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
- */
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-apply plugin: 'com.android.library'
-
-android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.3"
-
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 27
-        versionCode 1
-        versionName "1.0"
+buildscript {
+    repositories {
+        google()
+        jcenter()
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            consumerProguardFiles 'proguard-rules.pro'
-        }
-        debug {
-            minifyEnabled false
-            consumerProguardFiles 'proguard-rules.pro'
-        }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
     }
 }
 
-ext {
-    supportVersion = "27.0.2"
-    okHttpVersion = "3.6.0"
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
 }
 
-dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "com.android.support:appcompat-v7:${supportVersion}"
-    implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
