@@ -14,7 +14,7 @@
 
     <application android:allowBackup="true"
                  android:label="@string/app_name">
-        <provider android:authorities="${applicationId}.me.ctknight.uploadmanager.uploadprovider"
+        <provider android:authorities="me.ctknight.uploadmanager.uploadprovider"
                   android:name="UploadProvider"
                   android:enabled="true"
                   android:exported="false">
