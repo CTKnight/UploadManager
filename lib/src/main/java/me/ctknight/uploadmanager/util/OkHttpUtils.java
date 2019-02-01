@@ -18,6 +18,10 @@ import okio.Okio;
 import okio.Source;
 
 public class OkHttpUtils {
+  private OkHttpUtils() {
+    throw new AssertionError("No constructor for this");
+  }
+
   public static RequestBody createRequestFromFile(final MediaType mediaType, final ParcelFileDescriptor fd) {
     return new RequestBody() {
       @Override
@@ -43,9 +47,5 @@ public class OkHttpUtils {
         // FIXME: not closing the fd here, because okhttp may try to use this several time (http 308)
       }
     };
-  }
-
-  private OkHttpUtils() {
-    throw new AssertionError("No constructor for this");
   }
 }

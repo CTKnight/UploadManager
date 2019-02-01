@@ -6,10 +6,10 @@ package me.ctknight.uploadmanager.util;
 
 public class LogUtils {
 
-    private LogUtils() {
-    }
+  private LogUtils() {
+  }
 
-    public static String makeTag(Class tClass) {
-        return tClass.getSimpleName();
-    }
+  public static String makeTag(Class tClass) {
+    return tClass.getSimpleName();
+  }
 }

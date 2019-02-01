@@ -30,13 +30,11 @@ public class NetworkUtils {
 
   private static final int TIMEOUT_MILLISECOND = 15000;
   private static final int DEFAULT_TIMEOUT = (int) (20 * 1000L);
-
+  public static final OkHttpClient sNetworkClient = buildClient();
   private static final String CHARSET_NAME = "UTF-8";
 
   private NetworkUtils() {
   }
-
-  public static final OkHttpClient sNetworkClient = buildClient();
 
   // Connectivity information
 

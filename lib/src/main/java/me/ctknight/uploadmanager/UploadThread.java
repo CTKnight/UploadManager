@@ -13,7 +13,6 @@ import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.zhy.http.okhttp.request.CountingRequestBody;
@@ -23,7 +22,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import me.ctknight.uploadmanager.util.LogUtils;
 import me.ctknight.uploadmanager.util.NetworkUtils;
