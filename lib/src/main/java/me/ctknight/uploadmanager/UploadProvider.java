@@ -148,7 +148,6 @@ public final class UploadProvider extends ContentProvider {
 
     @Override
     public String getType(@NonNull final Uri uri) {
-
         int match = sURIMatcher.match(uri);
         switch (match) {
             case ALL_UPLOADS:
