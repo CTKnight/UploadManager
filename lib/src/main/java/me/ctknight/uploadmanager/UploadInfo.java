@@ -29,7 +29,7 @@ import me.ctknight.uploadmanager.util.LogUtils;
 import static me.ctknight.uploadmanager.util.NetworkUtils.isConnected;
 import static me.ctknight.uploadmanager.util.NetworkUtils.isMobileNetwork;
 
-public class UploadInfo {
+class UploadInfo {
 
     public static final String TAG = LogUtils.makeTag(UploadInfo.class);
 

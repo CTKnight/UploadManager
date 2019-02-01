@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import me.ctknight.uploadmanager.util.LogUtils;
+import me.ctknight.uploadmanager.util.NetworkUtils;
 import me.ctknight.uploadmanager.util.OkHttpUtils;
 import okhttp3.Call;
 import okhttp3.Headers;
@@ -48,12 +49,10 @@ import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY;
 
 
-public class UploadThread implements Runnable, CountingRequestBody.Listener {
-
-  private static final int DEFAULT_TIMEOUT = (int) (20 * 1000L);
+class UploadThread implements Runnable, CountingRequestBody.Listener {
 
   private static final String TAG = LogUtils.makeTag(UploadThread.class);
-  private static final OkHttpClient mClient = buildClient();
+  private static final OkHttpClient mClient = NetworkUtils.sNetworkClient;
   private static final Object mMonitor = new Object();
   private final Context mContext;
   private final UploadNotifier mNotifier;
@@ -92,13 +91,6 @@ public class UploadThread implements Runnable, CountingRequestBody.Listener {
     return false;
   }
 
-  @NonNull
-  private static OkHttpClient buildClient() {
-    OkHttpClient.Builder builder = new OkHttpClient.Builder()
-        .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
-        .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
-    return builder.build();
-  }
 
   @Override
   public void run() {

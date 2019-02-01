@@ -30,7 +30,7 @@ import java.util.Map;
 
 import me.ctknight.uploadmanager.util.TimeUtils;
 
-public class UploadNotifier {
+class UploadNotifier {
 
     public static final String NOTIFICATION_CHANNEL = "Upload notification";
 
