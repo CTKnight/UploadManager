@@ -264,7 +264,7 @@ public class UploadManager {
      * upload, either from a system notification or from the uploads UI.
      */
     public final static String ACTION_NOTIFICATION_CLICKED =
-            "com.myqsc.mobile3.intent.action.UPLOAD_NOTIFICATION_CLICKED";
+            "me.ctknight.uploadmanager.intent.action.UPLOAD_NOTIFICATION_CLICKED";
 
     /**
      * Intent action to launch an activity to display all uploads.

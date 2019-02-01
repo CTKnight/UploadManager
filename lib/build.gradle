@@ -35,4 +35,5 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.android.support:appcompat-v7:${supportVersion}"
     implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    implementation 'com.zhy:okhttputils:2.6.2'
 }
