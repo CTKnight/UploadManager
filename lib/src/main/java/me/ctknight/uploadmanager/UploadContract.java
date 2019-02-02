@@ -54,9 +54,7 @@ public final class UploadContract {
   }
 
   public static boolean isWaiting(UploadInfo upload) {
-    return upload.mStatus == UPLOAD_STATUS.WAITING_FOR_NETWORK ||
-        upload.mStatus == UPLOAD_STATUS.WAITING_FOR_WIFI ||
-        upload.mStatus == UPLOAD_STATUS.WAITING_TO_RETRY;
+    return ;
   }
 
   public static final class Constants {
@@ -70,27 +68,27 @@ public final class UploadContract {
     /**
      * The minimum amount of progress that has to be done before the progress bar gets updated
      */
-    public static final int MIN_PROGRESS_STEP = 65536;
+    public static final int MIN_PROGRESS_STEP = 1024;
     /**
      * The minimum amount of time that has to elapse before the progress bar gets updated, in
      * ms
      */
     public static final long MIN_PROGRESS_TIME = 2000;
     /**
-     * The number of times that the download manager will retry its network
+     * The number of times that the upload manager will retry its network
      * operations when no progress is happening before it gives up.
      */
     public static final int MAX_RETRIES = 5;
     /**
-     * The minimum amount of time that the download manager accepts for
+     * The minimum amount of time that the upload manager accepts for
      * a Retry-After response header with a parameter in delta-seconds.
      */
-    public static final int MIN_RETRY_AFTER = 30; // 30s
+    public static final int MIN_RETRY_AFTER = 5; // 5s
     /**
-     * The maximum amount of time that the download manager accepts for
+     * The maximum amount of time that the upload manager accepts for
      * a Retry-After response header with a parameter in delta-seconds.
      */
-    public static final int MAX_RETRY_AFTER = 24 * 60 * 60; // 24h
+    public static final int MAX_RETRY_AFTER = 5 * 60; // 5 minutes
     /**
      * The maximum number of redirects.
      */
@@ -100,86 +98,47 @@ public final class UploadContract {
      * Each subsequent retry grows exponentially, doubling each time.
      * The time is in seconds.
      */
-    public static final int RETRY_FIRST_DELAY = 30;
+    public static final int RETRY_FIRST_DELAY = 5;
   }
 
-  public static final class UPLOAD_COLUMNS implements android.provider.BaseColumns {
-    //        public static final String _DATA = "_data";
-    //FileName
-    public static final String COLUMN_TARGET_URL = "url";
-    public static final String COLUMN_FILE_URI = "uri";
-    public static final String COLUMN_UID = "uid";
-    public static final String COLUMN_MIME_TYPE = "mimetype";
-    public static final String COLUMN_STATUS = "status";
-    public static final String COLUMN_NUM_FAILED = "numfailed";
-    public static final String COLUMN_RETRY_AFTER = "retryafter";
-    public static final String COLUMN_LAST_MODIFICATION = "lastmod";
-    public static final String COLUMN_TOTAL_BYTES = "totalbytes";
-    public static final String COLUMN_CURRENT_BYTES = "currentbytes";
-    //for notification
-    public static final String COLUMN_TITLE = "title";
-    public static final String COLUMN_DESCRIPTION = "description";
-    public static final String COLUMN_DELETED = "deleted";
-    public static final String COLUMN_NOTIFICATION_PACKAGE = "notificationpackage";
-    public static final String COLUMN_NOTIFICATION_CLASS = "notificationclass";
-    public static final String COLUMN_NOTIFICATION_EXTRAS = "notificationextras";
-    public static final String COLUMN_VISIBILITY = "visibility";
-    public static final String RETRY_AFTER_X_REDIRECT_COUNT = "method";
-    public static final String COLUMN_CONTROL = "control";
-    public static final String COLUMN_BYPASS_NETWORK_CHANGE = "bypassnetworkchange";
-    public static final String COLUMN_ALLOW_ROAMING = "allowroaming";
-    public static final String COLUMN_ERROR_MSG = "errormsg";
-    public static final String COLUMN_SERVER_RESPONSE = "response";
-    public static final String COLOMN_DATA_FIELD_NAME = "datafiled";
-    //TODO: check if all columns are initialized in database onCreate() and UploadInfo
+  public enum UploadStatus {
+    PENDING(0),
+    PAUSED(1),
+    RUNNING(2),
 
+    WAITING_TO_RETRY(10),
+    WAITING_FOR_NETWORK(11),
+    WAITING_FOR_WIFI(12),
+
+    SUCCESS(20),
+
+    CAN_NOT_RESUME(40),
+    CANCELED(41),
+    // HTTP status code is not 2XX,
+    HTTP_CODE_ERROR(42),
+    HTTP_DATA_ERROR(43),
+    /**
+     * error when reading file
+     */
+    FILE_ERROR(44),
+    UNKNOWN_ERROR(50),
+
+    FAILED(60);
+    private int status;
+
+    UploadStatus(int status) {
+      this.status = status;
+    }
+
+    public int getStatus() {
+      return status;
+    }
   }
-
-  public static final class UPLOAD_URIS {
-    public static final String TABLE_NAME = "uploads";
-    public static final String UPLOAD_AUTHORITY = "me.ctknight.uploadmanager.uploadprovider";
-    public static final Uri UPLOAD_AUTHORITY_URI = Uri.parse(ContentResolver.SCHEME_CONTENT + "://" + UPLOAD_AUTHORITY);
-    public static final Uri CONTENT_URI = UPLOAD_AUTHORITY_URI.buildUpon().appendPath(TABLE_NAME).build();
-  }
-
-  public static final class UPLOAD_STATUS {
-
-    /*not started yet*/
-    public static final int PENDING = 0;
-    public static final int RUNNING = 192;
-
-    public static final int WAITING_TO_RETRY = 194;
-    public static final int WAITING_FOR_NETWORK = 195;
-    public static final int WAITING_FOR_WIFI = 196;
-
-    public static final int SUCCESS = 200;
-
-    public static final int MIN_ARTIFICIAL_ERROR_STATUS = 488;
-    public static final int CANNOT_RESUME = 489;
-    public static final int CANCELED = 490;
-    public static final int UNKNOWN_ERROR = 491;
-    public static final int FILE_ERROR = 492;
-    public static final int UNHANDLED_REDIRECT = 493;
-    public static final int UNHANDLED_HTTP_CODE = 494;
-    public static final int HTTP_DATA_ERROR = 495;
-    public static final int TOO_MANY_REDIRECTS = 497;
-    public static final int FAILED = 504;
-    public static final int FILE_NOT_FOUND = 508;
-    public static final int DEVICE_NOT_FOUND_ERROR = 599;
-  }
-
-  public static final class VISIBILITY_STATUS {
-    public static final int VISIBLE = 0;
-    public static final int VISIBLE_COMPLETE = 1;
-    public static final int HIDDEN_COMPLETE = 2;
-    public static final int VISIBLE_ONLY_COMPLETION = 3;
-    public static final int HIDDEN = 5;
-  }
-
-  public static final class CONTROL {
-    public static final int RUN = 0;
-    public static final int PAUSED = 1;
-
+  public enum Visibility {
+    VISIBLE,
+    VISIBLE_UNTIL_COMPLETE,
+    HIDDEN_UNTIL_COMPLETE,
+    HIDDEN
   }
 
   public static final class RequestContent {

@@ -320,6 +320,7 @@ public class UploadManager {
 
   private UploadManager(Context context) {
     mResolver = context.getApplicationContext().getContentResolver();
+    Database.INSTANCE = Database.Companion.buildDatabase(context);
   }
 
   /**
