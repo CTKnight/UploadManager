@@ -10,6 +10,7 @@ import android.util.JsonWriter
 import com.squareup.sqldelight.ColumnAdapter
 import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
+import me.ctknight.uploadmanager.Part
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadInfo
 import okhttp3.Headers
@@ -23,6 +24,13 @@ internal class Database {
     internal lateinit var INSTANCE: UploadDatabase
     fun buildDatabase(context: Context): UploadDatabase {
       val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
+      val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
+        override fun decode(databaseValue: String) =
+            HttpUrl.parse(databaseValue)
+
+        override fun encode(value: HttpUrl) =
+            value.toString()
+      }
       return UploadDatabase(driver, UploadInfo.Adapter(
           StatusAdapter = EnumColumnAdapter(),
           MimeTypeAdapter = object : ColumnAdapter<MediaType, String> {
@@ -33,13 +41,7 @@ internal class Database {
                 value.toString()
           },
           VisibilityAdapter = EnumColumnAdapter(),
-          RefererAdapter = object : ColumnAdapter<HttpUrl, String> {
-            override fun decode(databaseValue: String) =
-                HttpUrl.parse(databaseValue)
-
-            override fun encode(value: HttpUrl) =
-                value.toString()
-          },
+          RefererAdapter = httpUrlAdapter,
           HeadersAdapter = object : ColumnAdapter<Headers, String> {
             override fun decode(databaseValue: String): Headers {
               val builder = Headers.Builder()
@@ -55,7 +57,6 @@ internal class Database {
             override fun decode(databaseValue: String): List<Part> {
               val jsonReader = JsonReader(StringReader(databaseValue))
               val result = ArrayList<Part>(5)
-
               jsonReader.use {
                 with(it) {
                   beginArray()
@@ -109,8 +110,10 @@ internal class Database {
               }
               return stringWriter.toString()
             }
-          }
+          },
+          TargeUrlAdapter = httpUrlAdapter
       ))
     }
   }
 }
+

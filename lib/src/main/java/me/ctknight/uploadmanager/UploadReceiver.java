@@ -41,24 +41,24 @@ public class UploadReceiver extends BroadcastReceiver {
 
   private static void handleNotificationBroadcast(Intent intent) {
     final String action = intent.getAction();
-    if (UploadContract.ACTION_LIST.equals(action)) {
+    if (UploadContract.INSTANCE.getACTION_LIST().equals(action)) {
       final long[] ids = intent.getLongArrayExtra(
           UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS);
       // TODO: 2016/2/18 add this in API doc.
       sendNotificationClickIntent(ids);
-    } else if (UploadContract.ACTION_HIDE.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_HIDE().equals(action)) {
       final long id = ContentUris.parseId(intent.getData());
       hideNotification(id);
 
-    } else if (UploadContract.ACTION_OPEN.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_OPEN().equals(action)) {
       final long id = ContentUris.parseId(intent.getData());
       openUploadFile(id);
       hideNotification(id);
 
-    } else if (UploadContract.ACTION_CANCEL.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_CANCEL().equals(action)) {
       final long id = ContentUris.parseId(intent.getData());
       cancelUpload(id);
-    } else if (UploadContract.ACTION_MANUAL_REDO.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_MANUAL_REDO().equals(action)) {
       final long id = ContentUris.parseId(intent.getData());
       redoUpload(id);
     }
@@ -174,13 +174,13 @@ public class UploadReceiver extends BroadcastReceiver {
       if (info != null && info.isConnected()) {
         startService();
       }
-    } else if (UploadContract.ACTION_RETRY.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_RETRY().equals(action)) {
       startService();
-    } else if (UploadContract.ACTION_LIST.equals(action)
-        || UploadContract.ACTION_HIDE.equals(action)
-        || UploadContract.ACTION_OPEN.equals(action)
-        || UploadContract.ACTION_MANUAL_REDO.equals(action)
-        || UploadContract.ACTION_CANCEL.equals(action)) {
+    } else if (UploadContract.INSTANCE.getACTION_LIST().equals(action)
+        || UploadContract.INSTANCE.getACTION_HIDE().equals(action)
+        || UploadContract.INSTANCE.getACTION_OPEN().equals(action)
+        || UploadContract.INSTANCE.getACTION_MANUAL_REDO().equals(action)
+        || UploadContract.INSTANCE.getACTION_CANCEL().equals(action)) {
 
       final PendingResult result = goAsync();
       if (result == null) {

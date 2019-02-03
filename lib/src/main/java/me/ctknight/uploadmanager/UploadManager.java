@@ -108,7 +108,7 @@ public class UploadManager {
    */
   public final static String COLUMN_STATUS = UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS;
 
-  public final static String COLUMN_USER_AGENT = UploadContract.RequestContent.COLUMN_USER_AGENT;
+  public final static String COLUMN_USER_AGENT = UploadContract.RequestContent.INSTANCE.getCOLUMN_USER_AGENT();
 
   /**
    * Provides more detail on the status of the upload.  Its meaning depends on the value of
@@ -733,7 +733,7 @@ public class UploadManager {
       int index = 0;
       for (Map.Entry<String, String> entry : mRequestHeaders.entrySet()) {
         String headerString = entry.getKey() + ": " + entry.getValue();
-        values.put(UploadContract.RequestContent.INSERT_KEY_PREFIX + index, headerString);
+        values.put(UploadContract.RequestContent.INSTANCE.getINSERT_KEY_PREFIX() + index, headerString);
         index++;
       }
     }
@@ -742,7 +742,7 @@ public class UploadManager {
       int index = 0;
       for (Map.Entry<String, String> entry : mContentDispositions.entrySet()) {
         String cdString = entry.getKey() + ": " + entry.getValue();
-        values.put(UploadContract.RequestContent.INSERT_CD_PREFIX + index, cdString);
+        values.put(UploadContract.RequestContent.INSTANCE.getINSERT_CD_PREFIX() + index, cdString);
         index++;
       }
     }

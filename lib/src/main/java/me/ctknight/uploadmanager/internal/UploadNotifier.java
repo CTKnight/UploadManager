@@ -173,7 +173,7 @@ class UploadNotifier {
       // fail waiting -> retry
       if (type == TYPE_ACTIVE || type == TYPE_WAITING) {
         final Uri uri = new Uri.Builder().scheme("active-dl").appendPath(tag).build();
-        final Intent intent = new Intent(UploadContract.ACTION_LIST,
+        final Intent intent = new Intent(UploadContract.INSTANCE.getACTION_LIST(),
             uri, mContext, UploadReceiver.class);
         intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS,
             getUploadIds(cluster));
@@ -184,7 +184,7 @@ class UploadNotifier {
         final UploadInfo info = cluster.iterator().next();
         if (type == TYPE_ACTIVE) {
           final Uri idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);
-          final Intent actionIntent = new Intent(UploadContract.ACTION_CANCEL,
+          final Intent actionIntent = new Intent(UploadContract.INSTANCE.getACTION_CANCEL(),
               idUri, mContext, UploadReceiver.class);
           builder.addAction(R.drawable.ic_clear_black_24dp,
               mContext.getString(R.string.notification_action_cancel),
@@ -192,7 +192,7 @@ class UploadNotifier {
         } else {
           // WAITING
           final Uri idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);
-          final Intent actionIntent = new Intent(UploadContract.ACTION_MANUAL_REDO,
+          final Intent actionIntent = new Intent(UploadContract.INSTANCE.getACTION_MANUAL_REDO(),
               idUri, mContext, UploadReceiver.class);
           builder.addAction(R.drawable.ic_redo_black_24dp,
               mContext.getString(R.string.notification_action_redo),
@@ -208,9 +208,9 @@ class UploadNotifier {
 
         final String action;
         if (UploadContract.isStatusError(info.mStatus)) {
-          action = UploadContract.ACTION_LIST;
+          action = UploadContract.INSTANCE.getACTION_LIST();
         } else {
-          action = UploadContract.ACTION_OPEN;
+          action = UploadContract.INSTANCE.getACTION_OPEN();
         }
         final Intent intent = new Intent(action, uri, mContext, UploadReceiver.class);
         intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS,
@@ -218,7 +218,7 @@ class UploadNotifier {
         builder.setContentIntent(PendingIntent.getBroadcast(mContext,
             0, intent, PendingIntent.FLAG_UPDATE_CURRENT));
 
-        final Intent hideIntent = new Intent(UploadContract.ACTION_HIDE,
+        final Intent hideIntent = new Intent(UploadContract.INSTANCE.getACTION_HIDE(),
             uri, mContext, UploadReceiver.class);
         builder.setDeleteIntent(PendingIntent.getBroadcast(mContext, 0, hideIntent, 0));
 
@@ -227,7 +227,7 @@ class UploadNotifier {
         final Uri uri = ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, info.mId);
         builder.setAutoCancel(true);
 
-        final String action = UploadContract.ACTION_LIST;
+        final String action = UploadContract.INSTANCE.getACTION_LIST();
 
         final Intent intent = new Intent(action, uri, mContext, UploadReceiver.class);
         intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS,
@@ -235,7 +235,7 @@ class UploadNotifier {
         builder.setContentIntent(PendingIntent.getBroadcast(mContext,
             0, intent, PendingIntent.FLAG_UPDATE_CURRENT));
 
-        final Intent hideIntent = new Intent(UploadContract.ACTION_HIDE,
+        final Intent hideIntent = new Intent(UploadContract.INSTANCE.getACTION_HIDE(),
             uri, mContext, UploadReceiver.class);
         builder.setDeleteIntent(PendingIntent.getBroadcast(mContext, 0, hideIntent, 0));
       }

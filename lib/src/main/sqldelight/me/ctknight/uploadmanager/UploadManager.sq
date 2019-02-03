@@ -1,7 +1,7 @@
 import java.lang.Boolean;
 import kotlin.collections.List;
 import me.ctknight.uploadmanager.UploadContract;
-import me.ctknight.uploadmanager.internal.Part;
+import me.ctknight.uploadmanager.Part;
 import okhttp3.Cookie;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -9,11 +9,11 @@ import okhttp3.MediaType;
 
 CREATE TABLE UploadInfo (
   _ID   INTEGER PRIMARY KEY AUTOINCREMENT,
-  TargeUrl   TEXT NOT NULL,
+  TargeUrl   TEXT AS HttpUrl NOT NULL,
   UserAgent   TEXT,
   Referer   TEXT AS HttpUrl,
   Headers    TEXT AS Headers,
-  Parts    TEXT AS List<Part>,
+  Parts    TEXT AS List<Part> NOT NULL,
   Status   TEXT AS UploadContract.UploadStatus NOT NULL DEFAULT "PENDING",
   NumFailed   INTEGER NOT NULL DEFAULT 0,
   RetryAfter   INTEGER NOT NULL DEFAULT 0,
@@ -33,7 +33,26 @@ selectById:
 SELECT * FROM UploadInfo
 WHERE _ID = ?;
 
+-- delete a record completely
+-- for most use cases, should set the status to deleted
+-- rather than delete it
 deleteById:
 DELETE FROM UploadInfo
+WHERE _ID = ?;
+
+updateStatus:
+UPDATE UploadInfo
+SET Status = ?
+WHERE _ID = ?;
+
+partialUpdate:
+UPDATE UploadInfo SET
+  Status = ?,
+  CurrentBytes = ?,
+  TotalBytes = ?,
+  NumFailed = ?,
+  RetryAfter = ?,
+  ServerResponse = ?,
+  Visibility = ?
 WHERE _ID = ?;
 

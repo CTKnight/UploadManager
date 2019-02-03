@@ -2,10 +2,10 @@
  * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
-package me.ctknight.uploadmanager.internal
+package me.ctknight.uploadmanager
 
-internal data class Part(
+data class Part(
     internal val name: String,
     internal val value: String,
-    internal val fileName: String?
+    internal val fileInfo: FileInfo?
 )

@@ -264,7 +264,7 @@ public class UploadService extends Service {
       Log.v(TAG, "updateLocked: " + "scheduling start in " + nextActionMillis + "ms");
 
 
-      final Intent intent = new Intent(UploadContract.ACTION_RETRY);
+      final Intent intent = new Intent(UploadContract.INSTANCE.getACTION_RETRY());
       intent.setClass(this, UploadReceiver.class);
       mAlarmManager.set(AlarmManager.RTC_WAKEUP, now + nextActionMillis,
           PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_ONE_SHOT));
