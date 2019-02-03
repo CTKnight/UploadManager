@@ -12,7 +12,9 @@ import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadInfo
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
+import okhttp3.MediaType
 import java.io.StringReader
 import java.io.StringWriter
 
@@ -22,23 +24,23 @@ internal class Database {
     fun buildDatabase(context: Context): UploadDatabase {
       val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
       return UploadDatabase(driver, UploadInfo.Adapter(
-          STATUSAdapter = EnumColumnAdapter(),
-          MIME_TYPEAdapter = object : ColumnAdapter<MediaType, String> {
+          StatusAdapter = EnumColumnAdapter(),
+          MimeTypeAdapter = object : ColumnAdapter<MediaType, String> {
             override fun decode(databaseValue: String) =
                 MediaType.parse(databaseValue)
 
             override fun encode(value: MediaType) =
                 value.toString()
           },
-          VISIBILITYAdapter = EnumColumnAdapter(),
-          REFERERAdapter = object : ColumnAdapter<HttpUrl, String> {
+          VisibilityAdapter = EnumColumnAdapter(),
+          RefererAdapter = object : ColumnAdapter<HttpUrl, String> {
             override fun decode(databaseValue: String) =
                 HttpUrl.parse(databaseValue)
 
             override fun encode(value: HttpUrl) =
                 value.toString()
           },
-          HEADERAdapter = object : ColumnAdapter<Headers, String> {
+          HeadersAdapter = object : ColumnAdapter<Headers, String> {
             override fun decode(databaseValue: String): Headers {
               val builder = Headers.Builder()
               databaseValue.lines().forEach { builder.add(it) }
@@ -49,31 +51,61 @@ internal class Database {
               return value.toString()
             }
           },
-          PARTAdapter = object : ColumnAdapter<List<MultipartBody.Part>, String> {
-            override fun decode(databaseValue: String): List<MultipartBody.Part> {
+          PartsAdapter = object : ColumnAdapter<List<Part>, String> {
+            override fun decode(databaseValue: String): List<Part> {
               val jsonReader = JsonReader(StringReader(databaseValue))
-              val result = ArrayList<MultipartBody.Part>(5)
-              with(jsonReader) {
-                beginArray()
-                while (hasNext()) {
-                  nextString()
+              val result = ArrayList<Part>(5)
+
+              jsonReader.use {
+                with(it) {
+                  beginArray()
+                  while (hasNext()) {
+                    var name = ""
+                    var value = ""
+                    var fileName: String? = null
+                    beginObject()
+                    while (hasNext()) {
+                      val tokenName = nextName()
+                      when (tokenName) {
+                        "name" -> {
+                          name = nextString()
+                        }
+                        "value" -> {
+                          value = nextString()
+                        }
+                        "fileName" -> {
+                          fileName = nextString()
+                        }
+                        else -> {
+                          skipValue()
+                        }
+                      }
+                    }
+                    result.add(Part(name, value, fileName))
+                    endObject()
+                  }
+                  endArray()
                 }
-                endArray()
-                close()
               }
               return result
             }
 
-            override fun encode(value: List<MultipartBody.Part>): String {
+            override fun encode(value: List<Part>): String {
               val stringWriter = StringWriter()
               val jsonWriter = JsonWriter(stringWriter)
-              with(jsonWriter) {
-                beginArray()
-                value.forEach {
-                  value(it.toString())
+              jsonWriter.use { writer ->
+                with(writer) {
+                  setIndent("")
+                  beginArray()
+                  value.forEach {
+                    beginObject()
+                    name("name").value(it.name)
+                    name("value").value(it.value)
+                    name("fileName").value(it.fileName)
+                    endObject()
+                  }
+                  endArray()
                 }
-                endArray()
-                close()
               }
               return stringWriter.toString()
             }

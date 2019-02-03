@@ -1,39 +1,32 @@
 import java.lang.Boolean;
 import kotlin.collections.List;
 import me.ctknight.uploadmanager.UploadContract;
+import me.ctknight.uploadmanager.internal.Part;
 import okhttp3.Cookie;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody.Part;
 
 CREATE TABLE UploadInfo (
   _ID   INTEGER PRIMARY KEY AUTOINCREMENT,
-  TARGET_URL   TEXT NOT NULL,
---   should allow multiple files
-  FILE_URI   TEXT NOT NULL,
-  DATA_FIELD_NAME   TEXT NOT NULL,
-  USER_AGENT   TEXT,
-  REFERER   TEXT AS HttpUrl,
-  HEADER    TEXT AS Headers,
-  PART    TEXT AS List<Part>,
-  STATUS   TEXT AS UploadContract.UploadStatus NOT NULL DEFAULT "PENDING",
-  NUM_FAILED   INTEGER NOT NULL DEFAULT 0,
-  RETRY_AFTER   INTEGER NOT NULL DEFAULT 0,
-  MIME_TYPE   TEXT AS MediaType NOT NULL,
-  LAST_MODIFICATION   INTEGER DEFAULT 0,
-  TITLE   TEXT NOT NULL,
-  DESCRIPTION   TEXT,
-  TOTAL_BYTES   INTEGER NOT NULL DEFAULT -1,
-  CURRENT_BYTES   INTEGER NOT NULL DEFAULT -1,
-  NOTIFICATION_PACKAGE   TEXT NOT NULL,
-  NOTIFICATION_CLASS   TEXT NOT NULL,
-  NOTIFICATION_EXTRAS   TEXT,
-  RETRY_AFTER_X_REDIRECT_COUNT   INTEGER NOT NULL DEFAULT 0,
-  VISIBILITY   TEXT AS UploadContract.Visibility NOT NULL DEFAULT "VISIBLE",
-  ERROR_MSG   TEXT,
-  ALLOW_ROAMING   INTEGER AS Boolean NOT NULL DEFAULT 1,
-  SERVER_RESPONSE   TEXT
+  TargeUrl   TEXT NOT NULL,
+  UserAgent   TEXT,
+  Referer   TEXT AS HttpUrl,
+  Headers    TEXT AS Headers,
+  Parts    TEXT AS List<Part>,
+  Status   TEXT AS UploadContract.UploadStatus NOT NULL DEFAULT "PENDING",
+  NumFailed   INTEGER NOT NULL DEFAULT 0,
+  RetryAfter   INTEGER NOT NULL DEFAULT 0,
+  MimeType   TEXT AS MediaType NOT NULL,
+  LastModification   INTEGER DEFAULT 0,
+  NotificationTitle   TEXT NOT NULL,
+  NotificationDescription   TEXT,
+  TotalBytes   INTEGER NOT NULL DEFAULT -1,
+  CurrentBytes   INTEGER NOT NULL DEFAULT -1,
+  Visibility   TEXT AS UploadContract.Visibility NOT NULL DEFAULT "VISIBLE",
+  ErrorMsg   TEXT,
+  NetworkOption   INTEGER AS Boolean NOT NULL DEFAULT 1,
+  ServerResponse   TEXT
 );
 
 selectById:

@@ -4,8 +4,8 @@
 
 package me.ctknight.uploadmanager.internal
 
-data class Part(
-    private val name: String,
-    val value: String,
-    val fileName: String?
+internal data class Part(
+    internal val name: String,
+    internal val value: String,
+    internal val fileName: String?
 )
