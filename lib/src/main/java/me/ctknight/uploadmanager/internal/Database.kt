@@ -2,7 +2,7 @@
  * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
-package me.ctknight.uploadmanager
+package me.ctknight.uploadmanager.internal
 
 import android.content.Context
 import android.util.JsonReader
@@ -10,14 +10,15 @@ import android.util.JsonWriter
 import com.squareup.sqldelight.ColumnAdapter
 import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
+import me.ctknight.uploadmanager.UploadDatabase
+import me.ctknight.uploadmanager.UploadInfo
 import okhttp3.*
 import java.io.StringReader
 import java.io.StringWriter
-import java.io.Writer
 
 internal class Database {
   companion object {
-    lateinit var INSTANCE: UploadDatabase
+    internal lateinit var INSTANCE: UploadDatabase
     fun buildDatabase(context: Context): UploadDatabase {
       val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
       return UploadDatabase(driver, UploadInfo.Adapter(
@@ -38,7 +39,7 @@ internal class Database {
                 value.toString()
           },
           HEADERAdapter = object : ColumnAdapter<Headers, String> {
-            override fun decode(databaseValue: String) : Headers {
+            override fun decode(databaseValue: String): Headers {
               val builder = Headers.Builder()
               databaseValue.lines().forEach { builder.add(it) }
               return builder.build()

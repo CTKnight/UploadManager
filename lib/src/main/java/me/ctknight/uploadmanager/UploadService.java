@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import me.ctknight.uploadmanager.internal.UploadNotifier;
 import me.ctknight.uploadmanager.util.LogUtils;
 
 import static android.text.format.DateUtils.MINUTE_IN_MILLIS;

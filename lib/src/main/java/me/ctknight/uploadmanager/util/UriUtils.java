@@ -32,7 +32,7 @@ public class UriUtils {
 
     if (cursor == null || !cursor.moveToFirst()) {
       // Fallback: Check if it is a file Uri.
-      if (uri.getScheme().equals(ContentResolver.SCHEME_FILE)) {
+      if (ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
         File file = new File(uri.getPath());
         return new OpenableInfo(file.getName(), file.length());
       }

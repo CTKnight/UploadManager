@@ -1,11 +1,13 @@
 /*
- * Copyright (c) 2018. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
 package me.ctknight.uploadmanager;
 
 import android.content.ContentResolver;
 import android.net.Uri;
+
+import me.ctknight.uploadmanager.UploadInfo;
 
 public final class UploadContract {
 

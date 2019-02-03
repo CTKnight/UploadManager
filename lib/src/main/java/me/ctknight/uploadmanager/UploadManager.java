@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.ctknight.uploadmanager.internal.Database;
 import me.ctknight.uploadmanager.util.FileUtils;
 import me.ctknight.uploadmanager.util.UriUtils;
 

@@ -104,7 +104,7 @@ public class UploadReceiver extends BroadcastReceiver {
 
   /**
    * Start activity to display the file represented by the given
-   * {@link me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS#_ID}.
+   * {@link UploadContract.UPLOAD_COLUMNS#_ID}.
    */
   private static void openUploadFile(long id) {
     if (!OpenHelper.startViewIntent(context, id, Intent.FLAG_ACTIVITY_NEW_TASK)) {
