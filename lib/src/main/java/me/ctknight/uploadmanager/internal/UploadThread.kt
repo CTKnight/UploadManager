@@ -32,6 +32,8 @@ internal class UploadThread(
   private val mId: Long = mInfo._ID
   // global setting
   private lateinit var mCall: Call
+  //  TODO: use this list to record unclosed fds and close them at appropriate time
+  private val fdList = ArrayList<ParcelFileDescriptor>(1)
   // upload has started or not
   private var mMadeProgress = false
   private var mLastUpdateBytes: Long = 0
