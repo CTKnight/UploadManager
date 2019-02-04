@@ -44,18 +44,6 @@ internal class UploadThread(
   private var mSpeedSampleStart: Long = 0
   private var mSpeedSampleBytes: Long = 0
 
-  @Throws(IOException::class)
-  private fun getFileDescriptor(uri: String): ParcelFileDescriptor? {
-    val fileUri = Uri.parse(uri)
-    try {
-      return mContext.contentResolver.openFileDescriptor(fileUri, "r")
-    } catch (e: IOException) {
-      Log.e("UploadThread", "getFileDescriptor: ", e)
-      throw e
-    }
-
-  }
-
   override fun run() {
     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
     val connectivityManager = mContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -138,11 +126,21 @@ internal class UploadThread(
       }
 
       mInfo.partialUpdate(mDatabase)
+      closeFds()
+      wakelock?.release()
+    }
+  }
 
-      if (wakelock != null) {
-        wakelock.release()
-        wakelock = null
-      }
+  @Throws(IOException::class)
+  private fun getFileDescriptor(uri: String): ParcelFileDescriptor {
+    val fileUri = Uri.parse(uri)
+    try {
+      return mContext.contentResolver.openFileDescriptor(fileUri, "r")
+          ?: throw FileNotFoundException("The return of openFileDescriptor($fileUri) is null")
+
+    } catch (e: FileNotFoundException) {
+      Log.e("UploadThread", "getFileDescriptor: ", e)
+      throw e
     }
   }
 
@@ -203,8 +201,10 @@ internal class UploadThread(
     mInfo.Parts.forEach {
       val fileInfo = it.fileInfo
       if (fileInfo != null) {
+        val fileDescriptor = getFileDescriptor(fileInfo.fileUri)
+        fdList.add(fileDescriptor)
         val fileRequestBody = OkHttpUtils.createRequestFromFile(
-            MediaType.parse(fileInfo.mimeType), getFileDescriptor(fileInfo.fileUri))
+            MediaType.parse(fileInfo.mimeType), fileDescriptor)
         builder.addFormDataPart(it.name, fileInfo.fileName, fileRequestBody)
       } else {
         builder.addFormDataPart(it.name, it.value)
@@ -289,6 +289,20 @@ internal class UploadThread(
       mLastUpdateBytes = currentBytes
       mLastUpdateTime = now
     }
+  }
+
+  private fun closeFds() {
+    fdList.forEach {
+      try {
+        it.close()
+      } catch (e: RuntimeException) {
+        // rethrow runtime
+        throw e
+      } catch (e: java.lang.Exception) {
+        // close quietly
+      }
+    }
+    fdList.clear()
   }
 
   companion object {
