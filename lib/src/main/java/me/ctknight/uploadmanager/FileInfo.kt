@@ -4,8 +4,13 @@
 
 package me.ctknight.uploadmanager
 
+import android.net.Uri
+import okhttp3.MediaType
+
 data class FileInfo(
-    val fileUri: String,
-    val mimeType: String,
+    val fileUri: Uri,
+    // TODO: default to be application/octet-stream
+    // according to https://tools.ietf.org/html/rfc7578#section-4.4
+    val mimeType: MediaType?,
     val fileName: String?
 )

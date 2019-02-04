@@ -5,41 +5,38 @@
 package me.ctknight.uploadmanager.internal
 
 import android.content.Context
+import android.net.Uri
 import android.util.JsonReader
 import android.util.JsonWriter
 import com.squareup.sqldelight.ColumnAdapter
 import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
+import me.ctknight.uploadmanager.FileInfo
 import me.ctknight.uploadmanager.Part
 import me.ctknight.uploadmanager.UploadDatabase
-import me.ctknight.uploadmanager.UploadInfo
+import me.ctknight.uploadmanager.UploadRecord
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import java.io.StringReader
 import java.io.StringWriter
+import java.util.concurrent.ConcurrentHashMap
 
 internal class Database {
   companion object {
     internal lateinit var INSTANCE: UploadDatabase
+    internal val ID_INFO_MAP: MutableMap<Long, UploadInfo> = ConcurrentHashMap(5)
     fun buildDatabase(context: Context): UploadDatabase {
       val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
       val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
         override fun decode(databaseValue: String) =
-            HttpUrl.parse(databaseValue)
+            HttpUrl.parse(databaseValue)!!
 
         override fun encode(value: HttpUrl) =
             value.toString()
       }
-      return UploadDatabase(driver, UploadInfo.Adapter(
+      return UploadDatabase(driver, UploadRecord.Adapter(
           StatusAdapter = EnumColumnAdapter(),
-          MimeTypeAdapter = object : ColumnAdapter<MediaType, String> {
-            override fun decode(databaseValue: String) =
-                MediaType.parse(databaseValue)
-
-            override fun encode(value: MediaType) =
-                value.toString()
-          },
           VisibilityAdapter = EnumColumnAdapter(),
           RefererAdapter = httpUrlAdapter,
           HeadersAdapter = object : ColumnAdapter<Headers, String> {
@@ -61,9 +58,9 @@ internal class Database {
                 with(it) {
                   beginArray()
                   while (hasNext()) {
-                    var name = ""
-                    var value = ""
-                    var fileName: String? = null
+                    var name: String? = null
+                    var value: String? = null
+                    var fileInfo: FileInfo? = null
                     beginObject()
                     while (hasNext()) {
                       val tokenName = nextName()
@@ -74,15 +71,39 @@ internal class Database {
                         "value" -> {
                           value = nextString()
                         }
-                        "fileName" -> {
-                          fileName = nextString()
+                        "fileInfo" -> {
+                          var fileName: String? = null
+                          var mimeType: MediaType? = null
+                          var fileUri: Uri? = null
+                          beginObject()
+                          while (hasNext()) {
+                            when (nextName()) {
+                              "fileName" -> {
+                                fileName = nextString()
+                              }
+                              "mimeType" -> {
+                                mimeType = MediaType.parse(nextString())
+                              }
+                              "fileUri" -> {
+                                fileUri = Uri.parse(nextString())
+                              }
+                            }
+                          }
+                          endObject()
+                          if (fileUri == null) {
+                            throw NullPointerException("the fileUri is null, with:\n $databaseValue")
+                          }
+                          fileInfo = FileInfo(fileUri, mimeType, fileName)
                         }
                         else -> {
                           skipValue()
                         }
                       }
                     }
-                    result.add(Part(name, value, fileName))
+                    if (name == null) {
+                      throw NullPointerException("the name is null in: $databaseValue ")
+                    }
+                    result.add(Part(name, value, fileInfo))
                     endObject()
                   }
                   endArray()
@@ -102,7 +123,16 @@ internal class Database {
                     beginObject()
                     name("name").value(it.name)
                     name("value").value(it.value)
-                    name("fileName").value(it.fileName)
+                    name("fileInfo")
+                    if (it.fileInfo == null) {
+                      nullValue()
+                    } else {
+                      beginObject()
+                      name("fileName").value(it.fileInfo.fileName)
+                      name("mimeType").value(it.fileInfo.mimeType?.toString())
+                      name("fileUri").value(it.fileInfo.fileUri.toString())
+                      endObject()
+                    }
                     endObject()
                   }
                   endArray()

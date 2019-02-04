@@ -7,7 +7,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 
-CREATE TABLE UploadInfo (
+CREATE TABLE UploadRecord (
   _ID   INTEGER PRIMARY KEY AUTOINCREMENT,
   TargeUrl   TEXT AS HttpUrl NOT NULL,
   UserAgent   TEXT,
@@ -17,36 +17,52 @@ CREATE TABLE UploadInfo (
   Status   TEXT AS UploadContract.UploadStatus NOT NULL DEFAULT "PENDING",
   NumFailed   INTEGER NOT NULL DEFAULT 0,
   RetryAfter   INTEGER NOT NULL DEFAULT 0,
-  MimeType   TEXT AS MediaType NOT NULL,
   LastModification   INTEGER DEFAULT 0,
-  NotificationTitle   TEXT NOT NULL,
+  NotificationTitle   TEXT,
   NotificationDescription   TEXT,
   TotalBytes   INTEGER NOT NULL DEFAULT -1,
   CurrentBytes   INTEGER NOT NULL DEFAULT -1,
   Visibility   TEXT AS UploadContract.Visibility NOT NULL DEFAULT "VISIBLE",
   ErrorMsg   TEXT,
+--   TODO: use enum
   NetworkOption   INTEGER AS Boolean NOT NULL DEFAULT 1,
   ServerResponse   TEXT
 );
 
+insertUpload:
+INSERT INTO UploadRecord
+(TargeUrl, UserAgent, Headers, Parts, NotificationTitle, NotificationDescription)
+VALUES
+(?, ?, ?, ?, ?, ?);
+
+lastInsertId:
+SELECT last_insert_rowid();
+
 selectById:
-SELECT * FROM UploadInfo
+SELECT * FROM UploadRecord
 WHERE _ID = ?;
+
+selectAll:
+SELECT * FROM UploadRecord;
+
+selectExceptVisibility:
+SELECT * FROM UploadRecord
+WHERE Visibility != ?;
 
 -- delete a record completely
 -- for most use cases, should set the status to deleted
 -- rather than delete it
 deleteById:
-DELETE FROM UploadInfo
+DELETE FROM UploadRecord
 WHERE _ID = ?;
 
 updateStatus:
-UPDATE UploadInfo
+UPDATE UploadRecord
 SET Status = ?
 WHERE _ID = ?;
 
 partialUpdate:
-UPDATE UploadInfo SET
+UPDATE UploadRecord SET
   Status = ?,
   CurrentBytes = ?,
   TotalBytes = ?,

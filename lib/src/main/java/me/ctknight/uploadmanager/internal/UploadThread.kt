@@ -24,7 +24,7 @@ import java.io.IOException
 internal class UploadThread(
     context: Context,
     private val mNotifier: UploadNotifier,
-    private var mInfo: UploadInfo.Impl,
+    private var mInfo: UploadRecord.Impl,
     private val mDatabase: UploadDatabase,
     private val mClient: OkHttpClient
 ) : Runnable, CountingRequestBody.Listener {
@@ -132,8 +132,7 @@ internal class UploadThread(
   }
 
   @Throws(IOException::class)
-  private fun getFileDescriptor(uri: String): ParcelFileDescriptor {
-    val fileUri = Uri.parse(uri)
+  private fun getFileDescriptor(fileUri: Uri): ParcelFileDescriptor {
     try {
       return mContext.contentResolver.openFileDescriptor(fileUri, "r")
           ?: throw FileNotFoundException("The return of openFileDescriptor($fileUri) is null")
@@ -203,11 +202,10 @@ internal class UploadThread(
       if (fileInfo != null) {
         val fileDescriptor = getFileDescriptor(fileInfo.fileUri)
         fdList.add(fileDescriptor)
-        val fileRequestBody = OkHttpUtils.createRequestFromFile(
-            MediaType.parse(fileInfo.mimeType), fileDescriptor)
+        val fileRequestBody = OkHttpUtils.createRequestFromFile(fileInfo.mimeType, fileDescriptor)
         builder.addFormDataPart(it.name, fileInfo.fileName, fileRequestBody)
       } else {
-        builder.addFormDataPart(it.name, it.value)
+        builder.addFormDataPart(it.name, it.value!!)
       }
     }
     val realBody = builder.build()
@@ -241,7 +239,7 @@ internal class UploadThread(
       mCall = mClient.newCall(buildRequest())
     }
     val response = mCall.execute()
-    val responseMsg = response.body().string()
+    val responseMsg = response.body()?.string()
     recordResponse(responseMsg)
   }
 
@@ -250,9 +248,12 @@ internal class UploadThread(
     mInfo.partialUpdate(mDatabase)
   }
 
-  private fun recordResponse(responseMsg: String) {
+  private fun recordResponse(responseMsg: String?) {
     if (BuildConfig.DEBUG) {
       Log.d(TAG, "executeUpload: $responseMsg")
+    }
+    if (responseMsg == null) {
+      return
     }
     mInfo = mInfo.copy(ServerResponse = responseMsg)
     mInfo.partialUpdate(mDatabase)

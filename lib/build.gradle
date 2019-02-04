@@ -45,7 +45,7 @@ android {
 
 ext {
     supportVersion = "28.0.0"
-    okHttpVersion = "3.6.0"
+    okHttpVersion = "3.8.0"
 }
 
 dependencies {
