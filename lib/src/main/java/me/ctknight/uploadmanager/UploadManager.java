@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import me.ctknight.uploadmanager.internal.Database;
-import me.ctknight.uploadmanager.util.FileUtils;
+import me.ctknight.uploadmanager.thrid_party.FileUtils;
 import me.ctknight.uploadmanager.util.UriUtils;
 
 import static me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME;

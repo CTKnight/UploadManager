@@ -44,7 +44,7 @@ public class OpenHelper {
       // TODO: 2016/5/6 add to doc: make sure Uris have granted permission.
       Log.e(TAG, "startViewIntent: failed to open url" + intent.getData());
       e.printStackTrace();
-      ToastUtils.show("Failed to open this url: Permission denied", context);
+      ToastUtils.show("Permission denied, Failed to open this uri: " + intent.getData(), context);
       return false;
     }
   }

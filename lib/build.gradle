@@ -51,7 +51,7 @@ ext {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
-    implementation "com.android.support:appcompat-v7:${supportVersion}"
+    implementation 'androidx.core:core-ktx:1.0.0'
     implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
     implementation "com.squareup.sqldelight:android-driver:${sqldelightVersion}"
     implementation 'com.zhy:okhttputils:2.6.2'

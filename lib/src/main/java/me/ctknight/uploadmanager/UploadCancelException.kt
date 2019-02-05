@@ -9,11 +9,11 @@ package me.ctknight.uploadmanager
  */
 
 class UploadCancelException : UploadException {
-  constructor() : super() {}
+  internal constructor() : super()
 
-  constructor(detailMessage: String) : super(detailMessage) {}
+  internal constructor(detailMessage: String) : super(detailMessage)
 
-  constructor(detailMessage: String, throwable: Throwable) : super(detailMessage, throwable) {}
+  internal constructor(detailMessage: String, throwable: Throwable) : super(detailMessage, throwable)
 
-  constructor(throwable: Throwable) : super(throwable) {}
+  internal constructor(throwable: Throwable) : super(throwable)
 }

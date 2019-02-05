@@ -43,10 +43,3 @@ internal fun UploadRecord.checkNetworkState(context: Context): UploadContract.Ne
 internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRecord? {
   return database.uploadManagerQueries.selectById(_ID).executeAsOneOrNull()
 }
-
-internal fun UploadRecord.startIfReady(executorService: ExecutorService): Boolean {
-  synchronized(this) {
-    val ready = isReadyToUpload()
-    val isActive =
-  }
-}

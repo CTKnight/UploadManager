@@ -7,8 +7,6 @@ package me.ctknight.uploadmanager
 import android.content.ContentResolver
 import android.net.Uri
 
-import me.ctknight.uploadmanager.UploadInfo
-
 object UploadContract {
 
   val ACTION_OPEN = "me.ctknight.uploadmanager.action.UPLOAD_OPEN"
@@ -18,6 +16,8 @@ object UploadContract {
   val ACTION_MANUAL_REDO = "me.ctknight.uploadmanager.action.UPLOAD_REDO"
   val ACTION_CANCEL = "me.ctknight.uploadmanager.action.UPLOAD_CANCEL"
   val ACTION_HIDE = "me.ctknight.uploadmanager.action.UPLOAD_HIDE"
+
+  val UPLOAD_CONTENT_URI: Uri = Uri.parse("")
 
   object Constants {
 
@@ -63,7 +63,7 @@ object UploadContract {
     val RETRY_FIRST_DELAY = 5
   }
 
-  enum class UploadStatus private constructor(val status: Int) {
+  enum class UploadStatus constructor(val status: Int) {
     PENDING(0),
     PAUSED(1),
     RUNNING(2),

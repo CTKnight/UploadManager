@@ -7,7 +7,6 @@ package me.ctknight.uploadmanager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.HandlerThread
@@ -15,10 +14,11 @@ import android.os.IBinder
 import android.os.Process
 import android.text.format.DateUtils.MINUTE_IN_MILLIS
 import android.util.Log
+import androidx.core.content.getSystemService
 import com.squareup.sqldelight.Query
 import me.ctknight.uploadmanager.internal.Database
+import me.ctknight.uploadmanager.internal.UploadInfo
 import me.ctknight.uploadmanager.internal.UploadNotifier
-import me.ctknight.uploadmanager.internal.updateFromDatabase
 import me.ctknight.uploadmanager.util.LogUtils
 import java.util.*
 import java.util.concurrent.*
@@ -49,7 +49,7 @@ class UploadService : Service() {
 
     val isActive: Boolean
     synchronized(mUploads) {
-      isActive = updateLocked()
+      isActive = updateFromDatabaseLocked(mDatabase)
     }
 
     if (msg.what == MSG_FINAL_UPDATE) {
@@ -101,7 +101,7 @@ class UploadService : Service() {
     super.onCreate()
     Log.v("UploadService", "created")
 
-    mAlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    mAlarmManager = getSystemService<AlarmManager>()
 
     mUpdateThread = HandlerThread("UploadService-UpdateThread")
     mUpdateThread.start()
@@ -139,7 +139,7 @@ class UploadService : Service() {
   }
 
   /**
-   * Enqueue an [.updateLocked] pass to occur after delay, usually to
+   * Enqueue an [.updateFromDatabaseLocked] pass to occur after delay, usually to
    * catch any finished operations that didn't trigger an update pass.
    */
   private fun enqueueFinalUpdate() {
@@ -150,7 +150,8 @@ class UploadService : Service() {
   }
 
 
-  private fun updateLocked(): Boolean {
+  // update the upload info from database
+  private fun updateFromDatabaseLocked(database: UploadDatabase): Boolean {
     val now = System.currentTimeMillis()
 
     var isActive = false
@@ -158,7 +159,7 @@ class UploadService : Service() {
 
     val staleIds = HashSet(mUploads.keys)
 
-    val activeList = mDatabase
+    val activeList = database
         .uploadManagerQueries
         .selectExceptVisibility(UploadContract.Visibility.HIDDEN_COMPLETE)
         .executeAsList()
@@ -166,17 +167,17 @@ class UploadService : Service() {
     activeList.forEach {
       val id = it._ID
       staleIds.remove(id)
-      var storedInfo = mUploads[id]
-      val info = if (storedInfo?.uploadRecord != null) {
-        storedInfo.uploadRecord.updateFromDatabase(mDatabase)
-      } else {
-        insertUploadLocked()
+      val storedInfo = mUploads.getOrElse(id) {
+        UploadInfo(it, null)
       }
-      info ?: return@forEach
-      if (info.Status == UploadContract.UploadStatus.DELETED) {
-        mDatabase.uploadManagerQueries.deleteById(info._ID)
-      } else {
+      // update the uploadInfo with those from database
+      storedInfo.uploadRecord = it
+      mUploads[id] = storedInfo
 
+      if (it.Status == UploadContract.UploadStatus.DELETED) {
+        mDatabase.uploadManagerQueries.deleteById(id)
+      } else {
+        storedInfo.startUploadIfReady(mExecutor)
       }
     }
 //    try {
@@ -204,13 +205,13 @@ class UploadService : Service() {
 //    }
 
     for (id in staleIds) {
-      deleteUploadLocked(id)
+      mUploads.remove(id)
     }
 
     mNotifier.updateWith(mUploads.values)
 
     if (nextActionMillis > 0 && nextActionMillis < java.lang.Long.MAX_VALUE) {
-      Log.v(TAG, "updateLocked: " + "scheduling start in " + nextActionMillis + "ms")
+      Log.v(TAG, "updateFromDatabaseLocked: " + "scheduling start in " + nextActionMillis + "ms")
 
 
       val intent = Intent(UploadContract.ACTION_RETRY)
@@ -220,28 +221,6 @@ class UploadService : Service() {
 
     }
     return isActive
-  }
-
-  private fun insertUploadLocked(): UploadInfo {
-    mDatabase.uploadManagerQueries.transaction {
-
-    }
-    val info = reader.newUploadInfo(this, mNotifier)
-    if (info.Visibility != UploadContract.Visibility.HIDDEN_COMPLETE) {
-      mUploads[info.mId] = info
-    }
-
-    Log.v(TAG, "insertUploadLocked: " + "processing inserted upload " + info.mId)
-
-    return info
-  }
-
-  private fun deleteUploadLocked(id: Long) {
-    val info = mUploads[id]
-    if (info != null && info.Status === UploadContract.UploadStatus.RUNNING) {
-      info.Status = UploadContract.UPLOAD_STATUS.CANCELED
-    }
-    mUploads.remove(id)
   }
 
   private inner class UploadManagerContentObserver : Query.Listener {

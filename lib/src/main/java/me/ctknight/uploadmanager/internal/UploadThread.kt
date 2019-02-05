@@ -12,6 +12,7 @@ import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
 import android.util.Log
+import androidx.core.content.getSystemService
 import com.zhy.http.okhttp.request.CountingRequestBody
 import me.ctknight.uploadmanager.*
 import me.ctknight.uploadmanager.UploadContract.UploadStatus.*
@@ -30,6 +31,7 @@ internal class UploadThread(
 ) : Runnable, CountingRequestBody.Listener {
   private val mContext: Context = context.applicationContext
   private val mId: Long = mInfo._ID
+  private val connectivityManager: ConnectivityManager? = context.getSystemService()
   // global setting
   private lateinit var mCall: Call
   //  TODO: use this list to record unclosed fds and close them at appropriate time
@@ -46,7 +48,6 @@ internal class UploadThread(
 
   override fun run() {
     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-    val connectivityManager = mContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     if (mInfo.Status == SUCCESS) {
       if (BuildConfig.DEBUG) {
@@ -62,7 +63,7 @@ internal class UploadThread(
       wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UploadThread$mId")
       wakelock.acquire()
 
-      val info = connectivityManager.activeNetworkInfo
+      val info = connectivityManager?.activeNetworkInfo
       if (info != null) {
         mNetworkType = info.type
       }
@@ -95,7 +96,7 @@ internal class UploadThread(
         }
 
         mInfo = if (mInfo.NumFailed < UploadContract.Constants.MAX_RETRIES) {
-          val info = connectivityManager.activeNetworkInfo
+          val info = connectivityManager?.activeNetworkInfo
           if (info != null && info.type == mNetworkType && info.isConnected) {
             // Underlying network is still intact, use normal backoff
             mInfo.copy(Status = WAITING_TO_RETRY)

@@ -9,22 +9,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.support.annotation.NonNull;
 
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import me.ctknight.uploadmanager.BuildConfig;
-import me.ctknight.uploadmanager.UploadNetworkException;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class NetworkUtils {
 
@@ -90,76 +82,5 @@ public class NetworkUtils {
   public static WifiInfo getWifiInfo(Context context) {
     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     return wifiManager.getConnectionInfo();
-  }
-
-  public static String get(String urlString) throws UploadNetworkException {
-    OkHttpClient client = new OkHttpClient.Builder()
-        .connectTimeout(TIMEOUT_MILLISECOND, TimeUnit.MILLISECONDS)
-        .readTimeout(TIMEOUT_MILLISECOND, TimeUnit.MILLISECONDS)
-        .build();
-    try {
-      Request request = new Request.Builder().get().url(urlString).build();
-      Response response = client.newCall(request).execute();
-      if (!response.isSuccessful()) {
-        response.body().close();
-        throw new UploadNetworkException("Bad HTTP status code" + response.code());
-      }
-      return response.body().string();
-    } catch (IOException e) {
-      throw new UploadNetworkException(e);
-    }
-  }
-
-  public static String get(String urlString, boolean useCaches) throws UploadNetworkException {
-
-    URL url;
-    try {
-      url = new URL(urlString);
-    } catch (MalformedURLException e) {
-      throw new UploadNetworkException(e);
-    }
-
-    HttpURLConnection connection = null;
-    InputStream inputStream = null;
-
-    try {
-
-      // NOTE: The connection type is specified in the protocol part of the url.
-      connection = (HttpURLConnection) url.openConnection();
-
-      connection.setConnectTimeout(TIMEOUT_MILLISECOND);
-      connection.setDoInput(true);
-      connection.setReadTimeout(TIMEOUT_MILLISECOND);
-      connection.setRequestMethod("GET");
-      // NOTE: gzip compression is enabled by default in the Android SDK implementation of
-      // HTTPURLConnection.
-      connection.setUseCaches(useCaches);
-
-      // Check for the only correct response code 200 according to the docs.
-      // NOTE: This will do the connection.
-      int responseCode = connection.getResponseCode();
-      if (responseCode != HttpURLConnection.HTTP_OK) {
-        throw new UploadNetworkException("Bad Http response code: " + responseCode);
-      }
-
-      inputStream = connection.getInputStream();
-      return IoUtils.inputStreamToString(inputStream, CHARSET_NAME);
-
-    } catch (IOException e) {
-
-      throw new UploadNetworkException(e);
-
-    } finally {
-
-      // We need this because sometimes StrictMode reports that InputStream is not closed.
-      // The root cause is hard to investigate, while closing it here seems harmless.
-      if (inputStream != null) {
-        IoUtils.close(inputStream);
-      }
-
-      if (connection != null) {
-        connection.disconnect();
-      }
-    }
   }
 }
