@@ -19,6 +19,7 @@ import com.squareup.sqldelight.Query
 import me.ctknight.uploadmanager.internal.Database
 import me.ctknight.uploadmanager.internal.UploadInfo
 import me.ctknight.uploadmanager.internal.UploadNotifier
+import me.ctknight.uploadmanager.internal.nextActionMillis
 import me.ctknight.uploadmanager.util.LogUtils
 import java.util.*
 import java.util.concurrent.*
@@ -173,44 +174,25 @@ class UploadService : Service() {
       if (it.Status == UploadContract.UploadStatus.DELETED) {
         mDatabase.uploadManagerQueries.deleteById(id)
       } else {
-        storedInfo.startUploadIfReady(mExecutor)
+        val activeUpload = storedInfo.startUploadIfReady(mExecutor)
+        isActive = isActive || activeUpload
       }
+      if (it.Visibility == UploadContract.Visibility.HIDDEN_COMPLETE) {
+        mUploads.remove(id)
+      }
+
+      nextActionMillis = Math.min(it.nextActionMillis(now), nextActionMillis)
     }
-//    try {
-//      val reader = UploadInfo.Reader(this, cursor)
-//      val idColumn = cursor.getColumnIndexOrThrow(UploadContract.UPLOAD_COLUMNS._ID)
-//      while (cursor.moveToNext()) {
-//        val id = cursor.getLong(idColumn)
-//
-//        if (info.mDeleted) {
-//          // Delete download if requested, but only after cleaning up
-//          resolver.delete(info.getUploadsUri(), null, null)
-//        } else {
-//          val activeUpload = info.startUploadIfReady(mExecutor)
-//          isActive = isActive or activeUpload
-//        }
-//
-//        if (info.mVisibility === UploadContract.VISIBILITY_STATUS.HIDDEN_COMPLETE) {
-//          mUploads.remove(id)
-//        }
-//
-//        nextActionMillis = Math.min(info.nextActionMillis(now), nextActionMillis)
-//      }
-//    } finally {
-//      cursor.close()
-//    }
 
     mNotifier.updateWith(mUploads.values)
 
     if (nextActionMillis > 0 && nextActionMillis < java.lang.Long.MAX_VALUE) {
-      Log.v(TAG, "updateFromDatabaseLocked: " + "scheduling start in " + nextActionMillis + "ms")
-
-
+      Log.v(TAG, "updateFromDatabaseLocked: scheduling start in $nextActionMillis ms")
       val intent = Intent(UploadContract.NotificationAction.Retry.actionString)
       intent.setClass(this, UploadReceiver::class.java)
+      // schedule a retry
       mAlarmManager?.set(AlarmManager.RTC_WAKEUP, now + nextActionMillis,
           PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_ONE_SHOT))
-
     }
     return isActive
   }

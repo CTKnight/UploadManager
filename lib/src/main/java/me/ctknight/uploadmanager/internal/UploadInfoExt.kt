@@ -8,7 +8,6 @@ import android.content.Context
 import me.ctknight.uploadmanager.UploadContract
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadRecord
-import java.util.concurrent.ExecutorService
 
 // only update the parts that refresh through
 internal fun UploadRecord.partialUpdate(database: UploadDatabase) {
@@ -46,4 +45,8 @@ internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatu
 
 internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRecord? {
   return database.uploadManagerQueries.selectById(_ID).executeAsOneOrNull()
+}
+
+internal fun UploadRecord.nextActionMillis(now: Long): Long {
+  TODO()
 }
