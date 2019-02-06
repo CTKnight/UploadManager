@@ -214,9 +214,9 @@ class UploadService : Service() {
       Log.v(TAG, "updateFromDatabaseLocked: " + "scheduling start in " + nextActionMillis + "ms")
 
 
-      val intent = Intent(UploadContract.ACTION_RETRY)
+      val intent = Intent(UploadContract.NotificationAction.Retry.intentExtraString)
       intent.setClass(this, UploadReceiver::class.java)
-      mAlarmManager!!.set(AlarmManager.RTC_WAKEUP, now + nextActionMillis,
+      mAlarmManager?.set(AlarmManager.RTC_WAKEUP, now + nextActionMillis,
           PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_ONE_SHOT))
 
     }
@@ -231,9 +231,9 @@ class UploadService : Service() {
 
   companion object {
 
-    private val MSG_UPDATE = 1
-    private val MSG_FINAL_UPDATE = 2
-    private val TAG = LogUtils.makeTag(UploadService::class.java)
+    private const val MSG_UPDATE = 1
+    private const val MSG_FINAL_UPDATE = 2
+    private val TAG = LogUtils.makeTag<UploadService>()
 
     private fun buildUploadExecutor(): ExecutorService {
       // it's the up limit set by cluster notification

@@ -4,18 +4,21 @@
 
 package me.ctknight.uploadmanager
 
-import android.content.ContentResolver
 import android.net.Uri
 
 object UploadContract {
 
-  val ACTION_OPEN = "me.ctknight.uploadmanager.action.UPLOAD_OPEN"
-  val ACTION_LIST = "me.ctknight.uploadmanager.action.UPLOAD_LIST"
-  val ACTION_RETRY = "me.ctknight.uploadmanager.action.UPLOAD_RETRY"
-  // redo is manually triggered by
-  val ACTION_MANUAL_REDO = "me.ctknight.uploadmanager.action.UPLOAD_REDO"
-  val ACTION_CANCEL = "me.ctknight.uploadmanager.action.UPLOAD_CANCEL"
-  val ACTION_HIDE = "me.ctknight.uploadmanager.action.UPLOAD_HIDE"
+  internal val ACTION_PREFIX = "me.ctknight.uploadmanager.action"
+
+  enum class NotificationAction(val intentExtraString: String) {
+    Open("$ACTION_PREFIX.UPLOAD_OPEN"),
+    List("$ACTION_PREFIX.UPLOAD_LIST"),
+    Retry("$ACTION_PREFIX.UPLOAD_RETRY"),
+    ManualRedo("$ACTION_PREFIX.UPLOAD_REDO"),
+    Cancel("$ACTION_PREFIX.UPLOAD_CANCEL"),
+    Hide("$ACTION_PREFIX.UPLOAD_HIDE")
+  }
+
 
   val UPLOAD_CONTENT_URI: Uri = Uri.parse("")
 
@@ -92,13 +95,20 @@ object UploadContract {
     internal fun isRetryable(): Boolean {
       TODO()
     }
+
     internal fun isOnGoing(): Boolean {
       TODO()
     }
+
     internal fun isDeletedOrCanceled(): Boolean {
       TODO()
     }
+
     internal fun isComplete(): Boolean {
+      TODO()
+    }
+
+    internal fun isFailed(): Boolean {
       TODO()
     }
   }
@@ -107,6 +117,7 @@ object UploadContract {
     VISIBLE,
     HIDDEN,
     VISIBLE_COMPLETE,
+    HIDDEN_UNTIL_COMPLETE,
     HIDDEN_COMPLETE
   }
 
