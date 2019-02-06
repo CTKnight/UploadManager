@@ -86,11 +86,11 @@ class UploadReceiver : BroadcastReceiver() {
   }
 
   private fun cancelUpload(id: Long) {
-    UploadManager.getUploadManger(context).remove(id)
+    UploadManager.getUploadManager(context).remove(id)
   }
 
   private fun redoUpload(id: Long) {
-    UploadManager.getUploadManger(context).restartUpload(id)
+    UploadManager.getUploadManager(context).restartUpload(id)
   }
 
   private fun hideNotification(id: Long) {

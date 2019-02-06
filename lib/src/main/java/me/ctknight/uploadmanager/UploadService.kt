@@ -65,8 +65,7 @@ class UploadService : Service() {
       // Dump speed and update details
       mNotifier.dumpSpeeds()
 
-      Log.wtf(TAG, "Final update pass triggered, isActive=" + isActive
-          + "; someone didn't update correctly.")
+      Log.wtf(TAG, "Final update pass triggered, isActive=$isActive; someone didn't update correctly.")
     }
 
     if (isActive) {

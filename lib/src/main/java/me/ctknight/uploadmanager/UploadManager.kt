@@ -10,47 +10,22 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import android.database.CursorWrapper
 import android.net.Uri
-import android.os.ParcelFileDescriptor
-import android.provider.BaseColumns
 
 import java.io.File
-import java.io.FileNotFoundException
 import java.util.ArrayList
-import java.util.HashMap
 
 import me.ctknight.uploadmanager.thirdparty.FileUtils
 import me.ctknight.uploadmanager.util.UriUtils
-
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLOMN_DATA_FIELD_NAME
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_ALLOW_ROAMING
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_CURRENT_BYTES
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_LAST_MODIFICATION
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_MIME_TYPE
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_COLUMNS.COLUMN_VISIBILITY
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.CANNOT_RESUME
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.DEVICE_NOT_FOUND_ERROR
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.FILE_ERROR
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.FILE_NOT_FOUND
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.HTTP_DATA_ERROR
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.MIN_ARTIFICIAL_ERROR_STATUS
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.PENDING
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.RUNNING
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.SUCCESS
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.TOO_MANY_REDIRECTS
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNHANDLED_HTTP_CODE
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.UNHANDLED_REDIRECT
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_FOR_WIFI
-import me.ctknight.uploadmanager.UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY
-import me.ctknight.uploadmanager.UploadContract.isStatusError
+import me.ctknight.uploadmanager.internal.Database
+import me.ctknight.uploadmanager.thirdparty.SingletonHolder
+import okhttp3.Headers
+import okhttp3.HttpUrl
 
 
 class UploadManager private constructor(context: Context) {
-  private val mBaseUri = UploadContract.UPLOAD_URIS.CONTENT_URI
+  private val mBaseUri = UploadContract.UPLOAD_CONTENT_URI
+  private val mDatabase = Database.getInstance(context)
 
   fun enqueue(request: Request): Long {
     val values = request.toContentValues()
@@ -78,11 +53,6 @@ class UploadManager private constructor(context: Context) {
   fun query(query: Query): Cursor? {
     val underlyingCursor = query.runQuery(mResolver, UNDERLYING_COLUMNS, mBaseUri) ?: return null
     return CursorTranslator(underlyingCursor, mBaseUri)
-  }
-
-  @Throws(FileNotFoundException::class)
-  fun openUploadedFile(id: Long): ParcelFileDescriptor? {
-    return mResolver.openFileDescriptor(getUploadUri(id), "r")
   }
 
   fun getUriForUploadedFile(id: Long): Uri? {
@@ -152,43 +122,29 @@ class UploadManager private constructor(context: Context) {
     return ContentUris.withAppendedId(mBaseUri, id)
   }
 
+  // TODO: use Builder pattern
   class Request {
-    private val mContext: Context
-    private var mTargetUrl: Uri? = null
-    private var mFileUri: Uri? = null
-    private val mRequestHeaders = HashMap<String, String>()
-    private val mContentDispositions = HashMap<String, String>()
-    private var mFilename: String? = null
+    private lateinit var mContext: Context
+    private var mTargetUrl: HttpUrl
+    private var mRequestHeaders: Headers? = null
+    private val mParts: MutableList<Part> = ArrayList()
     private var mTitle: String? = null
     private var mDescription: String? = null
-    private var mMimeType: String? = null
     private var mUserAgent: String? = null
-    private var mDataFieldName: String? = null
     private var mMobileAllowed = true
     /**
      * can take any of the following values: [.VISIBILITY_HIDDEN]
      * [.VISIBILITY_VISIBLE_COMPLETED], [.VISIBILITY_VISIBLE],
      * [.VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION]
      */
-    private var mNotificationVisibility = VISIBILITY_VISIBLE
+    private var mNotificationVisibility:UploadContract.Visibility = UploadContract.Visibility.VISIBLE
 
     /**
-     * @param uri the HTTP or HTTPS URI to upload.
+     * @param url the HTTP or HTTPS URI to upload.
      */
-    constructor(uri: Uri?, context: Context) {
-      if (uri == null) {
-        throw NullPointerException()
-      }
-      val scheme = uri.scheme
-      if (scheme == null || scheme != "http" && scheme != "https") {
-        throw IllegalArgumentException("Can only upload http/https URIs: $uri")
-      }
-      mTargetUrl = uri
+    constructor(url: HttpUrl, context: Context) {
+      mTargetUrl = url
       mContext = context.applicationContext
-    }
-
-    internal constructor(uriString: String) {
-      mTargetUrl = Uri.parse(uriString)
     }
 
     /**
@@ -223,50 +179,17 @@ class UploadManager private constructor(context: Context) {
      * @see [HTTP/1.1
      * Message Headers](http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html.sec4.2)
      */
-    fun addRequestHeader(@NonNull header: String?, @Nullable value: String?): Request {
-      var value = value
-      if (header == null) {
-        throw NullPointerException("header cannot be null")
-      }
-      if (header.contains(":")) {
-        throw IllegalArgumentException("header may not contain ':'")
-      }
-      if (value == null) {
-        value = ""
-      }
-      mRequestHeaders[header] = value
+    private fun setRequestHeaders(headers: Headers): Request {
+      mRequestHeaders = headers
       return this
     }
 
-    fun addRequestHeaders(headers: Map<String, String>): Request {
-      // add them one by one to avoid some Maps' not-allow-null implementation
-      for (key in headers.keys) {
-        addRequestHeader(key, headers[key])
-      }
+    fun addPart(part: Part): Request{
+      mParts.add(part)
       return this
     }
 
-    fun addContentDisposition(@NonNull name: String?, @Nullable value: String?): Request {
-      var value = value
-      if (name == null) {
-        throw NullPointerException("content disposition cannot be null")
-      }
-
-      if (value == null) {
-        value = ""
-      }
-      mContentDispositions[name] = value
-      return this
-    }
-
-    fun addContentDispositions(cds: Map<String, String>): Request {
-      for (key in cds.keys) {
-        addContentDisposition(key, cds[key])
-      }
-      return this
-    }
-
-    fun addUserAgent(userAgent: String): Request {
+    fun setUserAgent(userAgent: String): Request {
       mUserAgent = userAgent
       return this
     }
@@ -294,21 +217,6 @@ class UploadManager private constructor(context: Context) {
     }
 
     /**
-     * Set the MIME content type of this upload.  This will override the content type
-     * declared
-     * in the server's response.
-     *
-     * @return this object
-     * @see [HTTP/1.1
-     * Media Types](http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html.sec3.7)
-     */
-    fun setMimeType(@Nullable mimeType: String): Request {
-      //call this only when you have to modify.
-      mMimeType = mimeType
-      return this
-    }
-
-    /**
      * Control whether a system notification is posted by the upload manager while this
      * upload is running or when it is completed.
      * If enabled, the upload manager posts notifications about uploads
@@ -327,7 +235,8 @@ class UploadManager private constructor(context: Context) {
      * @param visibility the visibility setting value
      * @return this object
      */
-    fun setNotificationVisibility(visibility: Int): Request {
+    fun setNotificationVisibility(visibility: UploadContract.Visibility): Request {
+      if ()
       mNotificationVisibility = visibility
       return this
     }
@@ -344,71 +253,6 @@ class UploadManager private constructor(context: Context) {
       return this
     }
 
-    /**
-     * set data field name.
-     * for example :
-     * ------WebKitFormBoundary6naClQj9yERx1WNV
-     * Content-Disposition: form-data; name="file"; filename="sum.docx"
-     * Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-     *
-     *
-     * where name = "file" the "file" is field name.
-     */
-    fun setDataFieldName(dataFieldName: String): Request {
-      mDataFieldName = dataFieldName
-      return this
-    }
-
-    /**
-     * @return ContentValues to be passed to UploadProvider.insert()
-     */
-    internal fun toContentValues(): ContentValues {
-      val values = ContentValues()
-      assert(mTargetUrl != null)
-      values.put(COLUMN_TARGET_URL, mTargetUrl!!.toString())
-
-      if (!mRequestHeaders.isEmpty()) {
-        encodeHttpHeaders(values)
-      }
-
-      if (!mContentDispositions.isEmpty()) {
-        encodePayload(values)
-      }
-      //NOTE: if you change items here , you should also go to UploadProvider and add them in filteredValue.
-      updateFilename(mFileUri)
-      putIfNonNull(values, COLUMN_FILE_URI, mFileUri)
-      putIfNonNull(values, COLUMN_MIME_TYPE, if (mMimeType == null) mContext.contentResolver.getType(mFileUri!!) else mMimeType)
-      putIfNonNull(values, COLUMN_TITLE, mFilename)
-      putIfNonNull(values, COLOMN_DATA_FIELD_NAME, if (mDataFieldName == null) "file" else mDataFieldName)
-      //use filename as default title.
-      putIfNonNull(values, COLUMN_TITLE, mTitle)
-      putIfNonNull(values, COLUMN_DESCRIPTION, mDescription)
-      putIfNonNull(values, COLUMN_USER_AGENT, mUserAgent)
-
-      values.put(COLUMN_VISIBILITY, mNotificationVisibility)
-      values.put(COLUMN_ALLOW_ROAMING, mMobileAllowed)
-      return values
-    }
-
-    private fun encodeHttpHeaders(values: ContentValues) {
-      var index = 0
-      for ((key, value) in mRequestHeaders) {
-        val headerString = entry.key + ": " + entry.value
-        values.put(UploadContract.RequestContent.INSTANCE.getINSERT_KEY_PREFIX() + index, headerString)
-        index++
-      }
-    }
-
-    private fun encodePayload(values: ContentValues) {
-      var index = 0
-      for ((key, value) in mContentDispositions) {
-        val cdString = entry.key + ": " + entry.value
-        values.put(UploadContract.RequestContent.INSTANCE.getINSERT_CD_PREFIX() + index, cdString)
-        index++
-      }
-    }
-
-
     fun updateFilename(uri: Uri?) {
       val fullPath = FileUtils.getPath(mContext, uri)
       if (fullPath != null) {
@@ -418,12 +262,6 @@ class UploadManager private constructor(context: Context) {
         if (info != null) {
           mFilename = info.displayName
         }
-      }
-    }
-
-    private fun putIfNonNull(contentValues: ContentValues, key: String, value: Any?) {
-      if (value != null) {
-        contentValues.put(key, value.toString())
       }
     }
 
@@ -449,6 +287,7 @@ class UploadManager private constructor(context: Context) {
        * boolean, String, String, long, boolean)}.
        */
       val VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION = 3
+
     }
   }
 
@@ -592,313 +431,16 @@ class UploadManager private constructor(context: Context) {
       val ORDER_DESCENDING = 2
     }
   }
-
-  /**
-   * This class wraps a cursor returned by UploadProvider -- the "underlying cursor" -- and
-   * presents a different set of columns, those defined in the DownloadManager.COLUMN_*
-   * constants.
-   * Some columns correspond directly to underlying values while others are computed from
-   * underlying data.
-   */
-  private class CursorTranslator(cursor: Cursor, private val mBaseUri: Uri) : CursorWrapper(cursor) {
-
-    private// return content URI for cache upload
-    val localUri: String
-      get() {
-        val uploadId = getLong(getColumnIndex(UploadContract.UPLOAD_COLUMNS._ID))
-        return ContentUris.withAppendedId(mBaseUri, uploadId).toString()
-      }
-
-    override fun getInt(columnIndex: Int): Int {
-      return getLong(columnIndex).toInt()
-    }
-
-    override fun getLong(columnIndex: Int): Long {
-      return if (getColumnName(columnIndex) == COLUMN_REASON) {
-        getReason(super.getInt(getColumnIndex(COLUMN_STATUS)))
-      } else if (getColumnName(columnIndex) == COLUMN_STATUS) {
-        translateStatus(super.getInt(getColumnIndex(COLUMN_STATUS))).toLong()
-      } else {
-        super.getLong(columnIndex)
-      }
-    }
-
-    override fun getString(columnIndex: Int): String {
-      return if (getColumnName(columnIndex) == COLUMN_LOCAL_URI)
-        localUri
-      else
-        super.getString(columnIndex)
-    }
-
-    private fun getReason(status: Int): Long {
-      when (translateStatus(status)) {
-        STATUS_FAILED -> return getErrorCode(status)
-
-        STATUS_PAUSED -> return getPausedReason(status)
-
-        else -> return 0 // arbitrary value when status is not an error
-      }
-    }
-
-    private fun getPausedReason(status: Int): Long {
-      when (status) {
-        WAITING_TO_RETRY -> return PAUSED_WAITING_TO_RETRY.toLong()
-
-        WAITING_FOR_NETWORK -> return PAUSED_WAITING_FOR_NETWORK.toLong()
-
-        WAITING_FOR_WIFI -> return PAUSED_QUEUED_FOR_WIFI.toLong()
-
-        else -> return PAUSED_UNKNOWN.toLong()
-      }
-    }
-
-    private fun getErrorCode(status: Int): Long {
-      if (400 <= status && status < MIN_ARTIFICIAL_ERROR_STATUS || 500 <= status && status < 600) {
-        // HTTP status code
-        return status.toLong()
-      }
-
-      when (status) {
-        FILE_ERROR, FILE_NOT_FOUND -> return ERROR_FILE_ERROR.toLong()
-
-        UNHANDLED_HTTP_CODE, UNHANDLED_REDIRECT -> return ERROR_UNHANDLED_HTTP_CODE.toLong()
-
-        HTTP_DATA_ERROR -> return ERROR_HTTP_DATA_ERROR.toLong()
-
-        TOO_MANY_REDIRECTS -> return ERROR_TOO_MANY_REDIRECTS.toLong()
-
-        DEVICE_NOT_FOUND_ERROR -> return ERROR_DEVICE_NOT_FOUND.toLong()
-
-        CANNOT_RESUME -> return ERROR_CANNOT_RESUME.toLong()
-
-        else -> return ERROR_UNKNOWN.toLong()
-      }
-    }
-
-    private fun translateStatus(status: Int): Int {
-      when (status) {
-        PENDING -> return STATUS_PENDING
-
-        RUNNING -> return STATUS_RUNNING
-
-        STATUS_PAUSED -> return STATUS_PAUSED
-
-        SUCCESS -> return STATUS_SUCCESSFUL
-        WAITING_TO_RETRY, WAITING_FOR_NETWORK, WAITING_FOR_WIFI -> {
-          assert(isStatusError(status))
-          return STATUS_FAILED
-        }
-        else -> {
-          assert(isStatusError(status))
-          return STATUS_FAILED
-        }
-      }
-    }
-  }
-
   companion object {
-
+    private object InstanceHolder: SingletonHolder<UploadManager, Context>(::UploadManager)
     /**
-     * An identifier for a particular upload, unique across the system.  Clients use this ID to
-     * make subsequent calls related to the upload.
-     */
-    val COLUMN_ID = UploadContract.UPLOAD_COLUMNS._ID
-
-    /**
-     * The client-supplied title for this upload.  This will be displayed in system notifications.
-     * Defaults to the empty string.
-     */
-    val COLUMN_TITLE = UploadContract.UPLOAD_COLUMNS.COLUMN_TITLE
-
-    /**
-     * The client-supplied description of this upload.  This will be displayed in system
-     * notifications.  Defaults to the empty string.
-     */
-    val COLUMN_DESCRIPTION = UploadContract.UPLOAD_COLUMNS.COLUMN_DESCRIPTION
-
-    /**
-     * URI to be uploaded.
-     */
-    val COLUMN_REMOTE_URI = UploadContract.UPLOAD_COLUMNS.COLUMN_TARGET_URL
-
-    val COLUMN_FILE_URI = UploadContract.UPLOAD_COLUMNS.COLUMN_FILE_URI
-
-    /**
-     * Internet Media Type of the uploaded file.  If no value is provided upon creation, this will
-     * initially be null and will be filled in based on the server's response once the upload has
-     * started.
+     * The only to get a instance of UploadManager
+     * this method is thread safe
      *
-     * @see [RFC 1590, defining Media Types](http://www.ietf.org/rfc/rfc1590.txt)
+     * @param context no need to be Application
+     * @return a singleton instance of UploadManager
      */
-    val COLUMN_MEDIA_TYPE = "media_type"
-
-    /**
-     * Total size of the upload in bytes.  This will initially be -1 and will be filled in once
-     * the upload starts.
-     */
-    val COLUMN_TOTAL_SIZE_BYTES = "total_size"
-
-    /**
-     * Uri where uploaded file will be stored.  If a destination is supplied by client, that URI
-     * will be used here.  Otherwise, the value will initially be null and will be filled in with a
-     * generated URI once the upload has started.
-     */
-    val COLUMN_LOCAL_URI = "localuri"
-
-    /**
-     * Current status of the upload, as one of the * constants.
-     */
-    val COLUMN_STATUS = UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS
-
-    val COLUMN_USER_AGENT = UploadContract.RequestContent.INSTANCE.getCOLUMN_USER_AGENT()
-
-    /**
-     * Provides more detail on the status of the upload.  Its meaning depends on the value of
-     * [.COLUMN_STATUS].
-     *
-     *
-     * When [.COLUMN_STATUS] is { #STATUS_FAILED}, this indicates the type of error that
-     * occurred.  If an HTTP error occurred, this will hold the HTTP status code as defined in RFC
-     * 2616.  Otherwise, it will hold one of the ERROR_* constants.
-     *
-     *
-     * When [.COLUMN_STATUS] is { #STATUS_PAUSED}, this indicates why the upload is
-     * paused.  It will hold one of the PAUSED_* constants.
-     *
-     *
-     * If [.COLUMN_STATUS] is neither { #STATUS_FAILED} nor { #STATUS_PAUSED}, this
-     * column's value is undefined.
-     *
-     * @see [RFC 2616
-     * status codes](http://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html.sec6.1.1)
-     */
-    val COLUMN_REASON = "reason"
-
-    /**
-     * Number of bytes upload so far.
-     */
-    val COLUMN_BYTES_UPLOADED_SO_FAR = COLUMN_CURRENT_BYTES
-
-    /**
-     * Timestamp when the upload was last modified, in [ System.currentTimeMillis()][System.currentTimeMillis] (wall clock time in UTC).
-     */
-    val COLUMN_LAST_MODIFIED_TIMESTAMP = COLUMN_LAST_MODIFICATION
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload is waiting to start.
-     */
-    val STATUS_PENDING = 1 shl 0
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload is currently running.
-     */
-    val STATUS_RUNNING = 1 shl 1
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload is waiting to retry or resume.
-     */
-    val STATUS_PAUSED = 1 shl 2
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload has successfully completed.
-     */
-    val STATUS_SUCCESSFUL = 1 shl 3
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload has failed (and will not be retried).
-     */
-    val STATUS_FAILED = 1 shl 4
-
-    /**
-     * Value of [.COLUMN_STATUS] when the upload has failed (and will not be retried).
-     */
-    val STATUS_CANCELLED = 1 shl 5
-
-    /**
-     * Value of COLUMN_ERROR_CODE when the upload has completed with an error that doesn't fit
-     * under any other error code.
-     */
-    val ERROR_UNKNOWN = 1000
-
-    /**
-     * Value of [.COLUMN_REASON] when a storage issue arises which doesn't fit under any
-     * other error code. Use the more specific [.ERROR_INSUFFICIENT_SPACE] and
-     * [.ERROR_DEVICE_NOT_FOUND] when appropriate.
-     */
-    val ERROR_FILE_ERROR = 1001
-
-    /**
-     * Value of [.COLUMN_REASON] when an HTTP code was received that upload manager
-     * can't handle.
-     */
-    val ERROR_UNHANDLED_HTTP_CODE = 1002
-
-    /**
-     * Value of [.COLUMN_REASON] when an error receiving or processing data occurred at
-     * the HTTP level.
-     */
-    val ERROR_HTTP_DATA_ERROR = 1004
-
-    /**
-     * Value of [.COLUMN_REASON] when there were too many redirects.
-     */
-    val ERROR_TOO_MANY_REDIRECTS = 1005
-
-    /**
-     * Value of [.COLUMN_REASON] when there was insufficient storage space. Typically,
-     * this is because the SD card is full.
-     */
-    val ERROR_INSUFFICIENT_SPACE = 1006
-
-    /**
-     * Value of [.COLUMN_REASON] when no external storage device was found. Typically,
-     * this is because the SD card is not mounted.
-     */
-    val ERROR_DEVICE_NOT_FOUND = 1007
-
-    /**
-     * Value of [.COLUMN_REASON] when some possibly transient error occurred but we can't
-     * resume the upload.
-     */
-    val ERROR_CANNOT_RESUME = 1008
-
-    /**
-     * Value of [.COLUMN_REASON] when the requested destination file already exists (the
-     * upload manager will not overwrite an existing file).
-     */
-    val ERROR_FILE_ALREADY_EXISTS = 1009
-
-    /**
-     * Value of [.COLUMN_REASON] when the upload has failed because of
-     * { NetworkPolicyManager} controls on the requesting application.
-     *
-     * @hide
-     */
-    val ERROR_BLOCKED = 1010
-
-    /**
-     * Value of [.COLUMN_REASON] when the upload is paused because some network error
-     * occurred and the upload manager is waiting before retrying the request.
-     */
-    val PAUSED_WAITING_TO_RETRY = 1
-
-    /**
-     * Value of [.COLUMN_REASON] when the upload is waiting for network connectivity to
-     * proceed.
-     */
-    val PAUSED_WAITING_FOR_NETWORK = 2
-
-    /**
-     * Value of [.COLUMN_REASON] when the upload exceeds a size limit for uploads over
-     * the mobile network and the upload manager is waiting for a Wi-Fi connection to proceed.
-     */
-    val PAUSED_QUEUED_FOR_WIFI = 3
-
-    /**
-     * Value of [.COLUMN_REASON] when the upload is paused for some other reason.
-     */
-    val PAUSED_UNKNOWN = 4
-
+    val getUploadManager = InstanceHolder::getInstance
     /**
      * Broadcast intent action sent by the upload manager when a upload completes.
      */
@@ -916,12 +458,6 @@ class UploadManager private constructor(context: Context) {
     val ACTION_VIEW_UPLOADS = "me.ctknight.uploadmanager.intent.action.VIEW_UPLOADS"
 
     /**
-     * Intent extra included with [.ACTION_VIEW_UPLOADS] to start UploadApp in
-     * sort-by-size mode.
-     */
-    val INTENT_EXTRAS_SORT_BY_SIZE = "android.app.UploadManager.extra_sortBySize"
-
-    /**
      * Intent extra included with [.ACTION_UPLOAD_COMPLETE] intents, indicating the ID (as a
      * long) of the upload that just completed.
      */
@@ -934,66 +470,5 @@ class UploadManager private constructor(context: Context) {
      * Intent using [android.content.Intent.getLongArrayExtra].
      */
     val EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS = "extra_click_upload_ids"
-    /**
-     * columns to request from DownloadProvider.
-     *
-     * @hide
-     */
-    val UNDERLYING_COLUMNS = arrayOf(BaseColumns._ID, COLUMN_TITLE, COLUMN_DESCRIPTION, COLUMN_STATUS, COLUMN_TARGET_URL, COLUMN_FILE_URI + " AS " + COLUMN_FILE_URI, COLUMN_MIME_TYPE + " AS " + COLUMN_MEDIA_TYPE, COLUMN_TOTAL_BYTES + " AS " + COLUMN_TOTAL_SIZE_BYTES, COLUMN_LAST_MODIFICATION + " AS " + COLUMN_LAST_MODIFIED_TIMESTAMP, COLUMN_CURRENT_BYTES + " AS " + COLUMN_BYTES_UPLOADED_SO_FAR,
-        /* add the following 'computed' columns to the cursor.
-       * they are not 'returned' by the database, but their inclusion
-       * eliminates need to have lot of methods in CursorTranslator
-       */
-        "'placeholder' AS $COLUMN_LOCAL_URI", "'placeholder' AS $COLUMN_REASON")
-    @Volatile
-    private var mUploadManager: UploadManager? = null
-
-    /**
-     * The only to get a instance of UploadManager
-     * this method is thread safe
-     *
-     * @param context no need to be Application
-     * @return a singleton instance of UploadManager
-     */
-    fun getUploadManger(context: Context): UploadManager? {
-      if (mUploadManager == null) {
-        synchronized(UploadManager::class.java) {
-          if (mUploadManager == null) {
-            mUploadManager = UploadManager(context.applicationContext)
-          }
-        }
-      }
-      return mUploadManager
-    }
-
-    /**
-     * Get a parameterized SQL WHERE clause to select a bunch of IDs.
-     */
-    internal fun getWhereClauseForIds(ids: LongArray): String {
-      val whereClause = StringBuilder()
-      whereClause.append("(")
-      for (i in ids.indices) {
-        if (i > 0) {
-          whereClause.append("OR ")
-        }
-        whereClause.append(BaseColumns._ID)
-        whereClause.append(" = ? ")
-      }
-      whereClause.append(")")
-      return whereClause.toString()
-    }
-
-    /**
-     * Get the selection args for a clause returned by [.getWhereClauseForIds].
-     */
-    internal fun getWhereArgsForIds(ids: LongArray): Array<String> {
-      val whereArgs = arrayOfNulls<String>(ids.size)
-      for (i in ids.indices) {
-        whereArgs[i] = java.lang.Long.toString(ids[i])
-      }
-      return whereArgs
-    }
   }
-
-
 }
