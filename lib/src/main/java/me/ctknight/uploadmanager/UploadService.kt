@@ -22,12 +22,13 @@ import me.ctknight.uploadmanager.internal.UploadNotifier
 import me.ctknight.uploadmanager.util.LogUtils
 import java.util.*
 import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicReference
 
 class UploadService : Service() {
+  private var mAlarmManager: AlarmManager? = getSystemService<AlarmManager>()
   // don't use LongSparseArray, it can't get keys' collection
-  private val mUploads = Database.ID_INFO_MAP
-  private val mDatabase: UploadDatabase = Database.INSTANCE
-  private var mAlarmManager: AlarmManager? = null
+  private val mUploads: MutableMap<Long, UploadInfo> = ConcurrentHashMap(5)
+  private val mDatabase: UploadDatabase = Database.getInstance(this)
   private lateinit var mNotifier: UploadNotifier
   private val mExecutor = buildUploadExecutor()
   private lateinit var mUpdateThread: HandlerThread
@@ -101,8 +102,6 @@ class UploadService : Service() {
     super.onCreate()
     Log.v("UploadService", "created")
 
-    mAlarmManager = getSystemService<AlarmManager>()
-
     mUpdateThread = HandlerThread("UploadService-UpdateThread")
     mUpdateThread.start()
     mUpdateHandler = Handler(mUpdateThread.looper, mUpdateCallback)
@@ -155,24 +154,21 @@ class UploadService : Service() {
     val now = System.currentTimeMillis()
 
     var isActive = false
-    var nextActionMillis = java.lang.Long.MAX_VALUE
-
-    val staleIds = HashSet(mUploads.keys)
+    var nextActionMillis = Long.MAX_VALUE
 
     val activeList = database
         .uploadManagerQueries
         .selectExceptVisibility(UploadContract.Visibility.HIDDEN_COMPLETE)
         .executeAsList()
-
+    // remove stale ids
+    mUploads.keys.removeAll(activeList.map { it._ID })
     activeList.forEach {
       val id = it._ID
-      staleIds.remove(id)
-      val storedInfo = mUploads.getOrElse(id) {
-        UploadInfo(it, null)
+      val storedInfo = mUploads.getOrPut(id) {
+        UploadInfo(AtomicReference(it), AtomicReference(null))
       }
       // update the uploadInfo with those from database
-      storedInfo.uploadRecord = it
-      mUploads[id] = storedInfo
+      storedInfo.uploadRecord.set(it)
 
       if (it.Status == UploadContract.UploadStatus.DELETED) {
         mDatabase.uploadManagerQueries.deleteById(id)
@@ -204,17 +200,13 @@ class UploadService : Service() {
 //      cursor.close()
 //    }
 
-    for (id in staleIds) {
-      mUploads.remove(id)
-    }
-
     mNotifier.updateWith(mUploads.values)
 
     if (nextActionMillis > 0 && nextActionMillis < java.lang.Long.MAX_VALUE) {
       Log.v(TAG, "updateFromDatabaseLocked: " + "scheduling start in " + nextActionMillis + "ms")
 
 
-      val intent = Intent(UploadContract.NotificationAction.Retry.intentExtraString)
+      val intent = Intent(UploadContract.NotificationAction.Retry.actionString)
       intent.setClass(this, UploadReceiver::class.java)
       mAlarmManager?.set(AlarmManager.RTC_WAKEUP, now + nextActionMillis,
           PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_ONE_SHOT))

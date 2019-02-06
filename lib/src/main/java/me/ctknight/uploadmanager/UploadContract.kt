@@ -10,13 +10,18 @@ object UploadContract {
 
   internal val ACTION_PREFIX = "me.ctknight.uploadmanager.action"
 
-  enum class NotificationAction(val intentExtraString: String) {
+  enum class NotificationAction(val actionString: String) {
     Open("$ACTION_PREFIX.UPLOAD_OPEN"),
     List("$ACTION_PREFIX.UPLOAD_LIST"),
     Retry("$ACTION_PREFIX.UPLOAD_RETRY"),
     ManualRedo("$ACTION_PREFIX.UPLOAD_REDO"),
     Cancel("$ACTION_PREFIX.UPLOAD_CANCEL"),
-    Hide("$ACTION_PREFIX.UPLOAD_HIDE")
+    Hide("$ACTION_PREFIX.UPLOAD_HIDE");
+
+    companion object {
+      fun fromActionString(actionString: String): NotificationAction? =
+          NotificationAction.values().firstOrNull { it.actionString == actionString }
+    }
   }
 
 

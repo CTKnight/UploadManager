@@ -54,7 +54,7 @@ public class OpenHelper {
    * subtleties around installing packages.
    */
   private static Intent buildViewIntent(Context context, long id) {
-    final UploadManager uploadManager = UploadManager.getUploadManger(context);
+    final UploadManager uploadManager = UploadManager.Companion.getUploadManger(context);
 
     final Cursor cursor = uploadManager.query(new UploadManager.Query().setFilterById(id));
     try {
@@ -62,8 +62,8 @@ public class OpenHelper {
         return null;
       }
 
-      final Uri localUri = getCursorUri(cursor, COLUMN_FILE_URI);
-      String mimeType = getCursorString(cursor, COLUMN_MEDIA_TYPE);
+      final Uri localUri = getCursorUri(cursor, Companion.getCOLUMN_FILE_URI());
+      String mimeType = getCursorString(cursor, Companion.getCOLUMN_MEDIA_TYPE());
 
       final Intent intent = new Intent(Intent.ACTION_VIEW);
 
@@ -72,7 +72,7 @@ public class OpenHelper {
         intent.setDataAndType(localUri, mimeType);
 
         // Also splice in details about where it came from
-        final Uri remoteUri = getCursorUri(cursor, COLUMN_REMOTE_URI);
+        final Uri remoteUri = getCursorUri(cursor, Companion.getCOLUMN_REMOTE_URI());
         intent.putExtra(Intent.EXTRA_ORIGINATING_URI, remoteUri);
 
       } else if ("file".equals(localUri.getScheme())) {

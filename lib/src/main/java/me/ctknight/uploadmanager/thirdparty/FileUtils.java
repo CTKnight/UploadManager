@@ -1,8 +1,4 @@
-/*
- * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
- */
-
-package me.ctknight.uploadmanager.thrid_party;
+package me.ctknight.uploadmanager.thirdparty;
 
 import android.annotation.TargetApi;
 import android.content.ContentResolver;

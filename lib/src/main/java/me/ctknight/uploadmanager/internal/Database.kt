@@ -15,18 +15,20 @@ import me.ctknight.uploadmanager.FileInfo
 import me.ctknight.uploadmanager.Part
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadRecord
+import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import java.io.StringReader
 import java.io.StringWriter
-import java.util.concurrent.ConcurrentHashMap
 
 internal class Database {
   companion object {
-    internal lateinit var INSTANCE: UploadDatabase
-    internal val ID_INFO_MAP: MutableMap<Long, UploadInfo> = ConcurrentHashMap(5)
-    fun buildDatabase(context: Context): UploadDatabase {
+    internal object DatabaseHolder: SingletonHolder<UploadDatabase, Context>({
+      buildDatabase(it)
+    })
+    internal val getInstance = DatabaseHolder::getInstance
+    internal fun buildDatabase(context: Context): UploadDatabase {
       val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
       val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
         override fun decode(databaseValue: String) =

@@ -40,6 +40,10 @@ internal fun UploadRecord.checkNetworkState(context: Context): UploadContract.Ne
   TODO()
 }
 
+internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus {
+  TODO()
+}
+
 internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRecord? {
   return database.uploadManagerQueries.selectById(_ID).executeAsOneOrNull()
 }

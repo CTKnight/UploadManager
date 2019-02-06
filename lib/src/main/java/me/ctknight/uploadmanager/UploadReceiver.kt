@@ -26,10 +26,11 @@ class UploadReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
 
     this.context = context
-    this.database = Database.INSTANCE
+    this.database = Database.getInstance(context)
     val actionString = intent.action
     val action = UploadContract.NotificationAction.values()
-        .firstOrNull { it.intentExtraString == actionString }
+        .firstOrNull { it.actionString == actionString }
+    // TODO: use requestNetwork() instead
     if (ConnectivityManager.CONNECTIVITY_ACTION == actionString) {
       val connManager: ConnectivityManager? = context.getSystemService()
       val info = connManager?.activeNetworkInfo
