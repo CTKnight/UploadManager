@@ -75,6 +75,7 @@ object UploadContract {
     PENDING(0),
     PAUSED(1),
     RUNNING(2),
+    // Marked as deleted
     DELETED(3),
 
     WAITING_TO_RETRY(10),

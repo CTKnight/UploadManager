@@ -45,6 +45,10 @@ WHERE _ID = ?;
 selectAll:
 SELECT * FROM UploadRecord;
 
+selectNotDeleted:
+SELECT * FROM UploadRecord
+WHERE Status != "DELETED";
+
 selectExceptVisibility:
 SELECT * FROM UploadRecord
 WHERE Visibility != ?;

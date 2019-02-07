@@ -15,7 +15,7 @@
     <application android:allowBackup="true"
                  android:label="@string/app_name">
 
-        <service android:name="UploadService"
+        <service android:name=".UploadJobService"
                  android:enabled="true"
                  android:exported="false"/>
 
@@ -23,7 +23,7 @@
                   android:enabled="true"
                   android:exported="false">
             <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.intent.action.LOCALE_CHANGED"/>
             </intent-filter>
         </receiver>
     </application>

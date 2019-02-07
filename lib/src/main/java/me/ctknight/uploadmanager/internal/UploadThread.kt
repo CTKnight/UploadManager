@@ -28,7 +28,7 @@ internal class UploadThread(
     private var mInfo: UploadRecord.Impl,
     private val mDatabase: UploadDatabase,
     private val mClient: OkHttpClient
-) : Runnable, CountingRequestBody.Listener {
+) : Thread(), CountingRequestBody.Listener {
   private val mContext: Context = context.applicationContext
   private val mId: Long = mInfo._ID
   private val connectivityManager: ConnectivityManager? = context.getSystemService()
