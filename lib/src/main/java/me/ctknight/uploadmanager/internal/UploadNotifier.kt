@@ -123,7 +123,7 @@ internal class UploadNotifier(private val mContext: Context) {
           // Build action intents
           // add action by type
           // active -> cancel
-          // fail waiting -> retry
+          // fail waiting -> retry / cancel
           when (type) {
             in shouldClusterStatus -> {
               val uri = Uri.Builder().scheme("active-ul")
@@ -145,6 +145,7 @@ internal class UploadNotifier(private val mContext: Context) {
                 builder.addAction(R.drawable.ic_clear_black_24dp,
                     mContext.getString(R.string.notification_action_cancel),
                     PendingIntent.getBroadcast(mContext, 0, actionIntent, 0))
+                builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
               } else {
                 // WAITING
                 val idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, info._ID)

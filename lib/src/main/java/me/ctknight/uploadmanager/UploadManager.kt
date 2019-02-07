@@ -28,31 +28,19 @@ class UploadManager private constructor(context: Context) {
   private val mDatabase = Database.getInstance(context)
 
   fun enqueue(request: Request): Long {
-    val values = request.toContentValues()
-    val uploadUri = mResolver.insert(UploadContract.UPLOAD_URIS.CONTENT_URI, values)
-    val id = java.lang.Long.parseLong(uploadUri!!.lastPathSegment!!)
-    return id
+    TODO()
   }
 
   fun remove(vararg ids: Long): Int {
-    if (ids == null || ids.size == 0) {
+    if (ids.isEmpty()) {
       // called with nothing to remove!
       throw IllegalArgumentException("input param 'ids' can't be null")
     }
-    val values = ContentValues()
-    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_DELETED, 1)
-    // if only one id is passed in, then include it in the uri itself.
-    // this will eliminate a full database scan in the download service.
-    return if (ids.size == 1) {
-      mResolver.update(ContentUris.withAppendedId(mBaseUri, ids[0]), values, null, null)
-    } else mResolver.update(mBaseUri, values, getWhereClauseForIds(ids),
-        getWhereArgsForIds(ids))
-    // TODO: 2016/2/5 use bulkinsert() instead
+    TODO()
   }
 
-  fun query(query: Query): Cursor? {
-    val underlyingCursor = query.runQuery(mResolver, UNDERLYING_COLUMNS, mBaseUri) ?: return null
-    return CursorTranslator(underlyingCursor, mBaseUri)
+  fun query(query: Query): List<UploadRecord> {
+    TODO()
   }
 
   fun getUriForUploadedFile(id: Long): Uri? {
@@ -323,112 +311,13 @@ class UploadManager private constructor(context: Context) {
     }
 
     /**
-     * Change the sort order of the returned Cursor.
-     *
-     * @param column    one of the COLUMN_* constants; currently, only
-     * { #COLUMN_LAST_MODIFIED_TIMESTAMP} and { #COLUMN_TOTAL_SIZE_BYTES} are
-     * supported.
-     * @param direction either [.ORDER_ASCENDING] or [.ORDER_DESCENDING]
-     * @return this object
-     */
-    fun orderBy(column: String, direction: Int): Query {
-      if (direction != ORDER_ASCENDING && direction != ORDER_DESCENDING) {
-        throw IllegalArgumentException("Invalid direction: $direction")
-      }
-
-      if (column == COLUMN_LAST_MODIFIED_TIMESTAMP) {
-        mOrderByColumn = UploadContract.UPLOAD_COLUMNS.COLUMN_LAST_MODIFICATION
-      } else if (column == COLUMN_TOTAL_SIZE_BYTES) {
-        mOrderByColumn = UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES
-      } else {
-        throw IllegalArgumentException("Cannot order by $column")
-      }
-      mOrderDirection = direction
-      return this
-    }
-
-    /**
      * Run this query using the given ContentResolver.
      *
      * @param projection the projection to pass to ContentResolver.query()
      * @return the Cursor returned by ContentResolver.query()
      */
-    internal fun runQuery(resolver: ContentResolver, projection: Array<String>, baseUri: Uri): Cursor? {
-      val uri = baseUri
-      val selectionParts = ArrayList<String>()
-      var selectionArgs: Array<String>? = null
-
-      if (mIds != null) {
-        selectionParts.add(getWhereClauseForIds(mIds!!))
-        selectionArgs = getWhereArgsForIds(mIds!!)
-      }
-
-      if (mStatusFlags != null) {
-        val parts = ArrayList<String>()
-        if (mStatusFlags and STATUS_PENDING != 0) {
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.PENDING))
-        }
-        if (mStatusFlags and STATUS_RUNNING != 0) {
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.RUNNING))
-        }
-        if (mStatusFlags and STATUS_PAUSED != 0) {
-          //parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.PAUSED_BY_APP));
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.WAITING_TO_RETRY))
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.WAITING_FOR_NETWORK))
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.WAITING_FOR_WIFI))
-        }
-        if (mStatusFlags and STATUS_SUCCESSFUL != 0) {
-          parts.add(statusClause("=", UploadContract.UPLOAD_STATUS.SUCCESS))
-        }
-        if (mStatusFlags and STATUS_FAILED != 0) {
-          parts.add("(" + statusClause(">=", 400)
-              + " AND " + statusClause("<", 600) + ")")
-        }
-        selectionParts.add(joinStrings(" OR ", parts))
-      }
-
-
-      // only return rows which are not marked 'deleted = 1'
-      selectionParts.add(UploadContract.UPLOAD_COLUMNS.COLUMN_DELETED + " != '1'")
-
-      val selection = joinStrings(" AND ", selectionParts)
-      val orderDirection = if (mOrderDirection == ORDER_ASCENDING) "ASC" else "DESC"
-      val orderBy = mOrderByColumn + " " + orderDirection
-
-      return resolver.query(uri, projection, selection, selectionArgs, orderBy)
-    }
-
-    private fun joinStrings(joiner: String, parts: Iterable<String>): String {
-      val builder = StringBuilder()
-      var first = true
-      for (part in parts) {
-        if (!first) {
-          builder.append(joiner)
-        }
-        builder.append(part)
-        first = false
-      }
-      return builder.toString()
-    }
-
-    private fun statusClause(operator: String, value: Int): String {
-      return UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS + operator + "'" + value + "'"
-    }
-
-    companion object {
-      /**
-       * Constant for use with [.orderBy]
-       *
-       * @hide
-       */
-      val ORDER_ASCENDING = 1
-
-      /**
-       * Constant for use with [.orderBy]
-       *
-       * @hide
-       */
-      val ORDER_DESCENDING = 2
+    internal fun runQuery(database: UploadDatabase): List<UploadRecord> {
+      TODO()
     }
   }
   companion object {

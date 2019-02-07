@@ -24,12 +24,17 @@ import java.io.StringWriter
 
 internal class Database {
   companion object {
-    private object DatabaseHolder: SingletonHolder<UploadDatabase, Context>({
+    private object DatabaseHolder : SingletonHolder<UploadDatabase, Context>({
       buildDatabase(it)
     })
+
     internal val getInstance = DatabaseHolder::getInstance
     private fun buildDatabase(context: Context): UploadDatabase {
-      val driver = AndroidSqliteDriver(UploadDatabase.Schema, context, "upload.db")
+      val driver = AndroidSqliteDriver(
+          UploadDatabase.Schema,
+          context.applicationContext,
+          "uploadmanager.db"
+      )
       val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
         override fun decode(databaseValue: String) =
             HttpUrl.parse(databaseValue)!!
