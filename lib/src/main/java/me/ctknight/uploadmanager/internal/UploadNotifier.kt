@@ -19,6 +19,7 @@ import android.text.TextUtils
 import android.util.Log
 import androidx.collection.LongSparseArray
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import androidx.core.content.res.ResourcesCompat
 import me.ctknight.uploadmanager.*
@@ -31,14 +32,12 @@ import java.util.*
 //so LongSparseArray<Long> is totally same with LongSparseLongArray.
 internal class UploadNotifier(private val mContext: Context) {
   //AOSP use final ,but I have to get current package name in a static method,so change it to static.
-  private val mNotifManager: NotificationManager? = mContext.getSystemService()
+  private val mNotifManager: NotificationManagerCompat = NotificationManagerCompat.from(mContext)
 
   private val mActiveNotif: MutableMap<Pair<Long, NotificationStatus>, Long> = HashMap()
 
-  // {Long: {Speed, lastModified}}
+  // {Id: {Speed, lastModified}}
   private val mUploadSpeed = LongSparseArray<Pair<Long, Long>>()
-
-  private val mUploadTouch = LongSparseArray<Long>()
 
   init {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mNotifManager != null) {
@@ -50,7 +49,7 @@ internal class UploadNotifier(private val mContext: Context) {
   }
 
   fun cancelAll() {
-    mNotifManager?.cancelAll()
+    mNotifManager.cancelAll()
   }
 
   fun notifyUploadSpeed(id: Long, bytesPerSecond: Long) {
@@ -297,7 +296,7 @@ internal class UploadNotifier(private val mContext: Context) {
             notification = inboxStyle.build()
 
           }
-          mNotifManager?.notify(tag, 0, notification)
+          mNotifManager.notify(tag, 0, notification)
         }
 
     //Build notification for each cluster
@@ -306,7 +305,7 @@ internal class UploadNotifier(private val mContext: Context) {
     while (it.hasNext()) {
       val tag = it.next()
       if (!clustered.containsKey(tag)) {
-        mNotifManager?.cancel(tag, 0)
+        mNotifManager.cancel(tag, 0)
         it.remove()
       }
     }
@@ -316,10 +315,11 @@ internal class UploadNotifier(private val mContext: Context) {
   fun dumpSpeeds() {
     synchronized(mUploadSpeed) {
       for (i in 0 until mUploadSpeed.size()) {
-        val id = mUploadSpeed[i.toLong()]!!
-        val delta = SystemClock.elapsedRealtime() - mUploadTouch[id]!!
-        Log.d("UploadManager", "Upload " + id + " speed " + mUploadSpeed.valueAt(i) + "bps, "
-            + delta + "ms ago")
+        val id = mUploadSpeed.keyAt(i)
+        val speed = mUploadSpeed.valueAt(i).first
+        val lastModified = mUploadSpeed.valueAt(i).second
+        val delta = SystemClock.elapsedRealtime() - lastModified
+        Log.d("UploadManager", "Upload $id speed $speed bytes/s, $delta ms ago")
       }
     }
   }

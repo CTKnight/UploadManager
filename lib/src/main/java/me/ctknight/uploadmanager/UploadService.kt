@@ -7,11 +7,9 @@ package me.ctknight.uploadmanager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.Service
+import android.app.job.JobService
 import android.content.Intent
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.IBinder
-import android.os.Process
+import android.os.*
 import android.text.format.DateUtils.MINUTE_IN_MILLIS
 import android.util.Log
 import androidx.core.content.getSystemService
@@ -41,7 +39,6 @@ class UploadService : Service() {
 
   private val mUpdateCallback = Handler.Callback { msg ->
     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-
     val startId = msg.arg1
     //            Log.v(TAG, "Updating for startId " + startId);
 
