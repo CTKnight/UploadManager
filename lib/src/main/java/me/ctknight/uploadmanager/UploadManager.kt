@@ -329,6 +329,7 @@ class UploadManager private constructor(context: Context) {
      * @param context no need to be Application
      * @return a singleton instance of UploadManager
      */
+    @JvmStatic
     val getUploadManager = InstanceHolder::getInstance
     /**
      * Broadcast intent action sent by the upload manager when a upload completes.

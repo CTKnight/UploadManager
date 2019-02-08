@@ -145,6 +145,7 @@ internal class UploadThread(
   }
 
   override fun onRequestProgress(bytesWritten: Long, contentLength: Long) {
+    // TODO check if should shutdown here
     mMadeProgress = true
     mInfo = mInfo.copy(CurrentBytes = bytesWritten, TotalBytes = contentLength)
     try {
@@ -307,8 +308,12 @@ internal class UploadThread(
     fdList.clear()
   }
 
+  internal fun requestShutdown() {
+    TODO()
+  }
+
   companion object {
-    private val TAG = LogUtils.makeTag(UploadThread::class.java)
+    private val TAG = LogUtils.makeTag<UploadThread>()
     private val mMonitor = Any()
   }
 }

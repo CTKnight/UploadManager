@@ -11,9 +11,10 @@ import android.util.SparseArray
 import androidx.annotation.GuardedBy
 import com.squareup.sqldelight.Query
 import me.ctknight.uploadmanager.internal.Database
+import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.UploadNotifier
 import me.ctknight.uploadmanager.internal.UploadThread
-import me.ctknight.uploadmanager.util.AsyncUtils
+import me.ctknight.uploadmanager.util.LogUtils
 
 class UploadJobService : JobService() {
   private val mDatabase: UploadDatabase = Database.getInstance(this)
@@ -23,7 +24,7 @@ class UploadJobService : JobService() {
 
   private val mObserver = object : Query.Listener {
     override fun queryResultsChanged() {
-      AsyncUtils.sAsyncHandler.post { UploadNotifier.getInstance(this@UploadJobService).updateWith() }
+      Helpers.sAsyncHandler.post { UploadNotifier.getInstance(this@UploadJobService).update() }
     }
   }
 
@@ -48,19 +49,19 @@ class UploadJobService : JobService() {
     val id = params.jobId
 
     // Spin up thread to handle this download
-    val info = DownloadInfo.queryDownloadInfo(this, id)
+    val info = getRecordById(id)
     if (info == null) {
-      Log.w(TAG, "Odd, no details found for download $id")
+      Log.w(TAG, "Odd, no details found for upload $id")
       return false
     }
 
-    val thread: DownloadThread
+    val thread: UploadThread
     synchronized(mActiveThreads) {
       if (mActiveThreads.indexOfKey(id) >= 0) {
-        Log.w(TAG, "Odd, already running download $id")
+        Log.w(TAG, "Odd, already running upload $id")
         return false
       }
-      thread = DownloadThread(this, params, info)
+      thread = UploadThread(this, params, info)
       mActiveThreads.put(id, thread)
     }
     thread.start()
@@ -71,16 +72,17 @@ class UploadJobService : JobService() {
   override fun onStopJob(params: JobParameters): Boolean {
     val id = params.jobId
 
-    val thread: DownloadThread?
+    val thread: UploadThread?
     synchronized(mActiveThreads) {
-      thread = mActiveThreads.removeReturnOld(id)
+      thread = mActiveThreads.get(id)
+      mActiveThreads.delete(id)
     }
     if (thread != null) {
       // If the thread is still running, ask it to gracefully shutdown,
       // and reschedule ourselves to resume in the future.
-      thread!!.requestShutdown()
+      thread.requestShutdown()
 
-      Helpers.scheduleJob(this, DownloadInfo.queryDownloadInfo(this, id))
+      Helpers.scheduleJob(this, getRecordById(id))
     }
     return false
   }
@@ -92,13 +94,20 @@ class UploadJobService : JobService() {
       mActiveThreads.remove(params.jobId)
     }
     if (needsReschedule) {
-      Helpers.scheduleJob(this, DownloadInfo.queryDownloadInfo(this, id))
+      Helpers.scheduleJob(this, getRecordById(id))
     }
 
     // Update notifications one last time while job is protecting us
-    mObserver.onChange(false)
+    mObserver.queryResultsChanged()
 
     // We do our own rescheduling above
     jobFinished(params, false)
+  }
+
+  private fun getRecordById(id: Int) =
+      mDatabase.uploadManagerQueries.selectById(id.toLong()).executeAsOneOrNull()
+
+  companion object {
+    private val TAG = LogUtils.makeTag<UploadJobService>()
   }
 }
