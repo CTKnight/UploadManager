@@ -50,3 +50,9 @@ internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRe
 internal fun UploadRecord.nextActionMillis(now: Long): Long {
   TODO()
 }
+
+// TODO: dummy impl
+internal fun UploadRecord.isMeteredAllowed() = true
+
+
+internal fun UploadRecord.isRoamingAllowed() = true

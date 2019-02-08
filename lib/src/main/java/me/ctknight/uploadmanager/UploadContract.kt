@@ -71,32 +71,32 @@ object UploadContract {
     val RETRY_FIRST_DELAY = 5
   }
 
-  enum class UploadStatus constructor(val status: Int) {
-    PENDING(0),
-    PAUSED(1),
-    RUNNING(2),
+  enum class UploadStatus {
+    PENDING,
+    RUNNING,
+    SUCCESS,
+    PAUSED,
+    CANCELED,
     // Marked as deleted
-    DELETED(3),
+    DELETED,
 
-    WAITING_TO_RETRY(10),
-    WAITING_FOR_NETWORK(11),
-    WAITING_FOR_WIFI(12),
+    WAITING_TO_RETRY,
+    WAITING_FOR_NETWORK,
+    WAITING_FOR_WIFI,
 
-    SUCCESS(20),
-
-    CAN_NOT_RESUME(40),
-    CANCELED(41),
+    CAN_NOT_RESUME,
     // HTTP status code is not 2XX,
-    HTTP_CODE_ERROR(42),
-    HTTP_DATA_ERROR(43),
+    HTTP_CODE_ERROR,
+    HTTP_DATA_ERROR,
+    HTTP_REDIRECT_ERROR,
     /**
      * error when reading file
      */
-    FILE_ERROR(44),
-    FILE_NOT_FOUND(45),
-    UNKNOWN_ERROR(50),
+    FILE_ERROR,
+    FILE_NOT_FOUND,
+    UNKNOWN_ERROR,
 
-    FAILED(60);
+    FAILED;
 
     internal fun isRetryable(): Boolean {
       TODO()

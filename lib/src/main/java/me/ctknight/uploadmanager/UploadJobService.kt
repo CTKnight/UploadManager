@@ -15,6 +15,7 @@ import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.UploadNotifier
 import me.ctknight.uploadmanager.internal.UploadThread
 import me.ctknight.uploadmanager.util.LogUtils
+import me.ctknight.uploadmanager.util.NetworkUtils
 
 class UploadJobService : JobService() {
   private val mDatabase: UploadDatabase = Database.getInstance(this)
@@ -49,7 +50,7 @@ class UploadJobService : JobService() {
     val id = params.jobId
 
     // Spin up thread to handle this download
-    val info = getRecordById(id)
+    val info = getRecordById(id) as UploadRecord.Impl?
     if (info == null) {
       Log.w(TAG, "Odd, no details found for upload $id")
       return false
@@ -61,7 +62,8 @@ class UploadJobService : JobService() {
         Log.w(TAG, "Odd, already running upload $id")
         return false
       }
-      thread = UploadThread(this, params, info)
+      // TODO: add API for custom networkClient
+      thread = UploadThread(this, NetworkUtils.sNetworkClient, params, info)
       mActiveThreads.put(id, thread)
     }
     thread.start()

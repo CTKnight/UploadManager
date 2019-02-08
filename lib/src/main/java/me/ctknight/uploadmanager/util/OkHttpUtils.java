@@ -5,7 +5,9 @@
 package me.ctknight.uploadmanager.util;
 
 import android.os.ParcelFileDescriptor;
+import android.system.Os;
 
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +24,7 @@ public class OkHttpUtils {
     throw new AssertionError("No constructor for this");
   }
 
-  public static RequestBody createRequestFromFile(final MediaType mediaType, final ParcelFileDescriptor fd) {
+  public static RequestBody createRequestFromFile(final MediaType mediaType, final ParcelFileDescriptor pfd) {
     return new RequestBody() {
       @Override
       public MediaType contentType() {
@@ -31,20 +33,21 @@ public class OkHttpUtils {
 
       @Override
       public long contentLength() {
-        return fd.getStatSize();
+        return pfd.getStatSize();
       }
 
       @Override
       public void writeTo(BufferedSink sink) throws IOException {
         InputStream inputStream = null;
         try {
-          inputStream = new FileInputStream(fd.getFileDescriptor());
+          FileDescriptor fd = pfd.getFileDescriptor();
+          inputStream = new FileInputStream(fd);
           Source source = Okio.buffer(Okio.source(inputStream));
           sink.writeAll(source);
         } finally {
           Util.closeQuietly(inputStream);
         }
-        // FIXME: not closing the fd here, because okhttp may try to use this several time (http 308)
+        // not closing the pfd here, because okhttp may try to use this several time (http 308)
       }
     };
   }
