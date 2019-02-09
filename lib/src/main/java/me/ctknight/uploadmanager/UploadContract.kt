@@ -28,13 +28,6 @@ object UploadContract {
   val UPLOAD_CONTENT_URI: Uri = Uri.parse("")
 
   object Constants {
-
-
-    /**
-     * The buffer size used to stream the data
-     */
-
-    val BUFFER_SIZE = 8192
     /**
      * The minimum amount of progress that has to be done before the progress bar gets updated
      */
@@ -43,7 +36,7 @@ object UploadContract {
      * The minimum amount of time that has to elapse before the progress bar gets updated, in
      * ms
      */
-    val MIN_PROGRESS_TIME: Long = 2000
+    val MIN_PROGRESS_TIME: Long = 1000
     /**
      * The number of times that the upload manager will retry its network
      * operations when no progress is happening before it gives up.
@@ -59,10 +52,6 @@ object UploadContract {
      * a Retry-After response header with a parameter in delta-seconds.
      */
     val MAX_RETRY_AFTER = 5 * 60 // 5 minutes
-    /**
-     * The maximum number of redirects.
-     */
-    val MAX_REDIRECTS = 5 // can't be more than 7.
     /**
      * The time between a failure and the first retry after an IOException.
      * Each subsequent retry grows exponentially, doubling each time.

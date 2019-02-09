@@ -52,7 +52,7 @@ internal fun UploadRecord.nextActionMillis(now: Long): Long {
 }
 
 // TODO: dummy impl
-internal fun UploadRecord.isMeteredAllowed() = true
+internal fun UploadRecord.isMeteredAllowed(context: Context) = true
 
 
-internal fun UploadRecord.isRoamingAllowed() = true
+internal fun UploadRecord.isRoamingAllowed(context: Context) = true

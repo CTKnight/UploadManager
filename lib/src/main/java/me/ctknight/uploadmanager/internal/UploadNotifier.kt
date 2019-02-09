@@ -24,6 +24,7 @@ import androidx.core.content.res.ResourcesCompat
 import me.ctknight.uploadmanager.*
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 
+
 //In AOSP Download Notifier,they use LongSparseLongArray,
 //actually,LongSparseArray is a generic version of LongSparseLongArray,
 //so LongSparseArray<Long> is totally same with LongSparseLongArray.
@@ -43,16 +44,21 @@ internal class UploadNotifier(private val mContext: Context) {
 
   init {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val channel = NotificationChannel(NOTIFICATION_CHANNEL,
-          mContext.getString(R.string.notification_channel),
-          NotificationManager.IMPORTANCE_DEFAULT)
-      val notificationManager: NotificationManager? = mContext.getSystemService()
-//      notificationManager?.createNotificationChannelGroup()
+      val notificationManager: NotificationManager = mContext.getSystemService()!!
+      notificationManager.also {
+        it.createNotificationChannel(NotificationChannel(CHANNEL_ACTIVE,
+            mContext.getText(R.string.upload_running),
+            NotificationManager.IMPORTANCE_MIN))
+      }.also {
+        it.createNotificationChannel(NotificationChannel(CHANNEL_WAITING,
+            mContext.getText(R.string.upload_queued),
+            NotificationManager.IMPORTANCE_DEFAULT))
+      }.also {
+        it.createNotificationChannel(NotificationChannel(CHANNEL_COMPLETE,
+            mContext.getText(R.string.upload_complete),
+            NotificationManager.IMPORTANCE_DEFAULT))
+      }
     }
-  }
-
-  fun cancelAll() {
-    mNotifManager.cancelAll()
   }
 
   fun notifyUploadSpeed(id: Long, bytesPerSecond: Long) {
@@ -90,8 +96,7 @@ internal class UploadNotifier(private val mContext: Context) {
           }
         }
 
-    clustered
-        .entries.forEach { (tag, cluster) ->
+    clustered .entries.forEach { (tag, cluster) ->
       buildClusterNotification(tag, cluster)
     }
     // remove stale notifications
@@ -186,7 +191,9 @@ internal class UploadNotifier(private val mContext: Context) {
 
     internal val getInstance = InstanceHolder::getInstance
 
-    val NOTIFICATION_CHANNEL = "Upload notification"
+    private val CHANNEL_ACTIVE = "active"
+    private val CHANNEL_WAITING = "waiting"
+    private val CHANNEL_COMPLETE = "complete"
 
     private val shouldClusterStatus = listOf(NotificationStatus.ACTIVE, NotificationStatus.WAITING)
 

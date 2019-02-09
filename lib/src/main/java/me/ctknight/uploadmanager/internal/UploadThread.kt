@@ -6,6 +6,7 @@ package me.ctknight.uploadmanager.internal
 
 import android.app.job.JobParameters
 import android.content.Context
+import android.database.sqlite.SQLiteClosable
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -22,6 +23,7 @@ import me.ctknight.uploadmanager.UploadRecord
 import me.ctknight.uploadmanager.util.LogUtils
 import me.ctknight.uploadmanager.util.OkHttpUtils
 import okhttp3.*
+import okhttp3.internal.Util
 import java.io.FileNotFoundException
 import java.io.IOException
 
@@ -111,7 +113,7 @@ internal class UploadThread(
         mInfo = mInfo.copy(Status = CAN_NOT_RESUME)
       }
 
-      if (mInfo.Status == WAITING_FOR_NETWORK && mInfo.isMeteredAllowed()) {
+      if (mInfo.Status == WAITING_FOR_NETWORK && mInfo.isMeteredAllowed(mContext)) {
         mInfo = mInfo.copy(Status = WAITING_FOR_WIFI)
       }
 
@@ -137,7 +139,6 @@ internal class UploadThread(
     try {
       return mContext.contentResolver.openFileDescriptor(fileUri, "r")
           ?: throw FileNotFoundException("The return of openFileDescriptor($fileUri) is null")
-
     } catch (e: FileNotFoundException) {
       logError("getFileDescriptor: ", e)
       throw StopRequestException(FILE_NOT_FOUND, e)
@@ -150,19 +151,22 @@ internal class UploadThread(
 
     updateProgress()
 
-    if (mShutdownRequested && !mCall.isCanceled) {
-      mCall.cancel()
+    if (mShutdownRequested) {
+      if (!mCall.isCanceled) {
+        mCall.cancel()
+      }
     }
   }
 
   @Throws(StopRequestException::class)
   private fun executeUpload() {
     checkConnectivity()
-    val response = uploadData()
-    val responseMsg = response.body()?.string()
-    recordResponse(responseMsg)
-    if (!response.isSuccessful) {
-      StopRequestException.throwUnhandledHttpError(response.code(), response.message())
+    uploadData().use { response ->
+      val responseMsg = response.body()?.string()
+      recordResponse(responseMsg)
+      if (!response.isSuccessful) {
+        StopRequestException.throwUnhandledHttpError(response.code(), response.message())
+      }
     }
   }
 
@@ -172,15 +176,15 @@ internal class UploadThread(
     if (info == null || !info.isConnected) {
       throw StopRequestException(WAITING_FOR_NETWORK, "Network is not connected")
     }
-    if (info.isRoaming && !mInfo.isRoamingAllowed()) {
+    if (info.isRoaming && !mInfo.isRoamingAllowed(mContext)) {
       throw StopRequestException(WAITING_FOR_NETWORK, "Waiting for not roaming Network")
     }
-    if (connectivityManager.isActiveNetworkMetered && !mInfo.isMeteredAllowed()) {
+    if (connectivityManager.isActiveNetworkMetered && !mInfo.isMeteredAllowed(mContext)) {
       throw StopRequestException(WAITING_FOR_NETWORK, "Waiting for un-metered Wifi")
     }
   }
 
-  @Throws(IOException::class)
+  @Throws(StopRequestException::class)
   private fun buildRequestBody(): RequestBody {
     val builder = MultipartBody.Builder()
         .setType(MultipartBody.FORM)
@@ -195,6 +199,7 @@ internal class UploadThread(
         builder.addFormDataPart(it.name, it.value!!)
       }
     }
+
     val realBody = builder.build()
     try {
       setTotalBytes(realBody.contentLength())
@@ -203,8 +208,7 @@ internal class UploadThread(
       setTotalBytes(-1)
     }
 
-    val wrapper = CountingRequestBody(realBody, this)
-    return wrapper
+    return CountingRequestBody(realBody, this)
   }
 
   private fun buildRequest(): Request {
@@ -279,16 +283,7 @@ internal class UploadThread(
   }
 
   private fun closeFds() {
-    fdList.forEach {
-      try {
-        it.close()
-      } catch (e: RuntimeException) {
-        // rethrow runtime
-        throw e
-      } catch (e: java.lang.Exception) {
-        // close quietly
-      }
-    }
+    fdList.forEach { Util.closeQuietly(it) }
     fdList.clear()
   }
 

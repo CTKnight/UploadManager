@@ -60,4 +60,8 @@
             小时
         </item>
     </plurals>
+    <string name="upload_running">正在上传</string>
+    <string name="upload_queued">上传已加入队列</string>
+    <string name="upload_failed">上传失败</string>
+    <string name="upload_complete">上传成功</string>
 </resources>

@@ -61,4 +61,8 @@
         </item>
     </plurals>
     <string name="notification_channel">Upload progress</string>
+    <string name="upload_running">Upload in progress</string>
+    <string name="upload_queued">Upload queued</string>
+    <string name="upload_failed">Upload unsuccessfully</string>
+    <string name="upload_complete">Upload complete</string>
 </resources>
