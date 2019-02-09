@@ -60,52 +60,62 @@ object UploadContract {
     val RETRY_FIRST_DELAY = 5
   }
 
-  enum class UploadStatus {
-    PENDING,
-    RUNNING,
-    SUCCESS,
-    PAUSED,
-    CANCELED,
-    // Marked as deleted
-    DELETED,
+  enum class UploadStatus(private val statusCode: Int) {
+    /*
+     * Lists the states that the download manager can set on a download
+     * to notify applications of the download progress.
+     * The codes follow the HTTP families:<br>
+     * 1xx: informational<br>
+     * 2xx: success<br>
+     * 3xx: redirects (not used by the download manager)<br>
+     * 4xx: client errors<br>
+     * 5xx: server errors
+     */
+    PENDING(100),
+    RUNNING(102),
+    PAUSED(103),
+    WAITING_TO_RETRY(194),
+    WAITING_FOR_NETWORK(195),
+    WAITING_FOR_WIFI(196),
 
-    WAITING_TO_RETRY,
-    WAITING_FOR_NETWORK,
-    WAITING_FOR_WIFI,
+    SUCCESS(200),
 
-    CAN_NOT_RESUME,
-    // HTTP status code is not 2XX,
-    HTTP_CODE_ERROR,
-    HTTP_DATA_ERROR,
-    HTTP_REDIRECT_ERROR,
+    CAN_NOT_RESUME(489),
+    CANCELED(490),
+    UNKNOWN_ERROR(491),
     /**
      * error when reading file
      */
-    FILE_ERROR,
-    FILE_NOT_FOUND,
-    UNKNOWN_ERROR,
+    FILE_ERROR(492),
+    FILE_NOT_FOUND(493),
+    // HTTP status code is not 2XX,
+    HTTP_CODE_ERROR(494),
+    HTTP_DATA_ERROR(495),
+    HTTP_REDIRECT_ERROR(496),
+    // Marked as deleted
+    DELETED(497),
+    FAILED(498);
 
-    FAILED;
+    internal fun isRetryable(): Boolean =
+        statusCode in 194..197
 
-    internal fun isRetryable(): Boolean {
-      TODO()
-    }
+    internal fun isOnGoing(): Boolean =
+        this == RUNNING
 
-    internal fun isOnGoing(): Boolean {
-      TODO()
-    }
 
-    internal fun isDeletedOrCanceled(): Boolean {
-      TODO()
-    }
+    internal fun isDeletedOrCanceled(): Boolean = this == DELETED || this == CANCELED
 
-    internal fun isComplete(): Boolean {
-      TODO()
-    }
+    /**
+     * Returns whether the upload has completed (either with success or
+     * error).
+     */
+    internal fun isCompleted(): Boolean =
+        statusCode in 200..300 || statusCode in 400..600
 
-    internal fun isFailed(): Boolean {
-      TODO()
-    }
+
+    internal fun isFailed(): Boolean =
+      statusCode >= 300
+
   }
 
   enum class Visibility {

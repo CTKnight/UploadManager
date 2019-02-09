@@ -39,8 +39,23 @@ internal fun UploadRecord.checkNetworkState(context: Context): UploadContract.Ne
   TODO()
 }
 
-internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus {
-  TODO()
+internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus? {
+  if (Visibility !in
+      arrayOf(UploadContract.Visibility.VISIBLE, UploadContract.Visibility.VISIBLE_COMPLETE)) {
+    return null
+  }
+  return when (Status) {
+    UploadContract.UploadStatus.WAITING_FOR_WIFI -> UploadNotifier.NotificationStatus.WAITING
+    UploadContract.UploadStatus.RUNNING -> UploadNotifier.NotificationStatus.ACTIVE
+    else -> {
+      if (Status.isCompleted()) {
+        UploadNotifier.NotificationStatus.COMPLETE
+      } else {
+        null
+      }
+    }
+  }
+
 }
 
 internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRecord? {

@@ -96,7 +96,7 @@ internal class UploadNotifier(private val mContext: Context) {
           }
         }
 
-    clustered .entries.forEach { (tag, cluster) ->
+    clustered.entries.forEach { (tag, cluster) ->
       buildClusterNotification(tag, cluster)
     }
     // remove stale notifications
@@ -107,81 +107,68 @@ internal class UploadNotifier(private val mContext: Context) {
     }
   }
 
-  private fun buildClusterNotification(tag: Pair<Long, NotificationStatus>, cluster: Iterable<UploadRecord>) {
+  private fun buildClusterNotification(tag: Pair<Long, NotificationStatus?>, cluster: Iterable<UploadRecord>) {
+    val (id, type) = tag
+    type ?: return
     val res = mContext.resources
-    val type = tag.second
-    val builder = NotificationCompat.Builder(mContext, NOTIFICATION_CHANNEL)
-    builder.color = ResourcesCompat.getColor(res, R.color.system_notification_accent_color, null)
-    val priority =
-        if (type in shouldClusterStatus)
-          NotificationCompat.PRIORITY_HIGH
-        else
-          NotificationCompat.PRIORITY_DEFAULT
-    builder.priority = priority
-    // Use time when cluster was first shown to avoid shuffling
-    // TODO: should firstShown be stored in to database
-    val firstShown = mActiveNotif.getOrPut(tag) { System.currentTimeMillis() }
-    builder.setWhen(firstShown)
+
+    val channel = when (type) {
+      NotificationStatus.ACTIVE -> CHANNEL_ACTIVE
+      NotificationStatus.COMPLETE -> CHANNEL_COMPLETE
+      NotificationStatus.WAITING -> CHANNEL_WAITING
+    }
+    val builder = NotificationCompat.Builder(mContext, channel)
 
     // Show relevant icon
-    // handle more than one items
-    // TODO: 2016/2/28 TEMP FIX
-    // For both continuable transfer and network check before transfer,
-    // but Box doesn't support previous one.
-    // In AOSP, action is set according to its status
-    // but we just need to open the upload list.
-
-    // Calculate and show progress
     when (type) {
       NotificationStatus.ACTIVE -> builder.setSmallIcon(android.R.drawable.stat_sys_upload)
-      NotificationStatus.FAILED -> builder.setSmallIcon(android.R.drawable.stat_sys_warning)
       NotificationStatus.COMPLETE -> builder.setSmallIcon(android.R.drawable.stat_sys_upload_done)
       NotificationStatus.WAITING -> builder.setSmallIcon(android.R.drawable.stat_sys_warning)
-      NotificationStatus.UNKNOWN -> builder.setSmallIcon(android.R.drawable.stat_sys_upload)
     }
 
-    // Build action intents
-    // add action by type
-    // active -> cancel
-    // fail waiting -> retry / cancel
-    when (type) {
-      in shouldClusterStatus -> {
-        val uri = Uri.Builder().scheme("active-ul")
-            .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
-        val intent = Intent(UploadContract.NotificationAction.List.actionString,
-            uri, mContext, UploadReceiver::class.java)
-        intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS,
-            getUploadIds(cluster))
-        builder.setContentIntent(PendingIntent.getBroadcast(mContext,
-            9, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-        builder.setOngoing(true)
+    builder.color = ResourcesCompat.getColor(res, R.color.system_notification_accent_color, null)
+    // Use time when cluster was first shown to avoid shuffling
+    // TODO: should firstShown be stored in to database
+    val firstShown = mActiveNotif.getOrPut(Pair(id, type)) { System.currentTimeMillis() }
+    builder.setWhen(firstShown)
+    builder.setOnlyAlertOnce(true)
 
-        // TODO: only handle the first
-        val info = cluster.first()
-        if (type == NotificationStatus.ACTIVE) {
-          val idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, info._ID)
-          val actionIntent = Intent(UploadContract.NotificationAction.Cancel.actionString,
-              idUri, mContext, UploadReceiver::class.java)
-          builder.addAction(R.drawable.ic_clear_black_24dp,
-              mContext.getString(R.string.notification_action_cancel),
-              PendingIntent.getBroadcast(mContext, 0, actionIntent, 0))
-          builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
-        } else {
-          // WAITING
-          val idUri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, info._ID)
-          val actionIntent = Intent(UploadContract.NotificationAction.ManualRedo.actionString,
-              idUri, mContext, UploadReceiver::class.java)
-          builder.addAction(R.drawable.ic_redo_black_24dp,
-              mContext.getString(R.string.notification_action_redo),
-              PendingIntent.getBroadcast(mContext, 0, actionIntent, 0))
-        }
+    // Calculate and show progress
+
+    if (type == NotificationStatus.ACTIVE || type == NotificationStatus.WAITING) {
+      val uploadIds = getUploadIds(cluster)
+      val uri = Uri.Builder().scheme("active-ul")
+          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
+      val intent = Intent(UploadContract.NotificationAction.List.actionString,
+          uri, mContext, UploadReceiver::class.java)
+      intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+      intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS, uploadIds)
+      intent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG, tag.toString())
+      builder.setContentIntent(PendingIntent.getBroadcast(mContext,
+          0, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+
+      if (type == NotificationStatus.ACTIVE) {
+        builder.setOngoing(true)
       }
-      NotificationStatus.COMPLETE -> {
-        TODO()
-      }
-      NotificationStatus.FAILED -> {
-        TODO()
-      }
+
+      val cancelUri = Uri.Builder().scheme("cancel-ul")
+          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
+      val cancelIntent = Intent(
+          UploadContract.NotificationAction.Cancel.actionString,
+          cancelUri,
+          mContext,
+          UploadReceiver::class.java
+      )
+      cancelIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+      cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_IDS, uploadIds)
+      cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG, tag.toString())
+
+      builder.addAction(R.drawable.ic_clear_black_24dp,
+          mContext.getString(R.string.notification_action_cancel),
+          PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0))
+      builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
+    } else if (type == NotificationStatus.COMPLETE) {
+
     }
   }
 
@@ -191,11 +178,9 @@ internal class UploadNotifier(private val mContext: Context) {
 
     internal val getInstance = InstanceHolder::getInstance
 
-    private val CHANNEL_ACTIVE = "active"
-    private val CHANNEL_WAITING = "waiting"
-    private val CHANNEL_COMPLETE = "complete"
-
-    private val shouldClusterStatus = listOf(NotificationStatus.ACTIVE, NotificationStatus.WAITING)
+    private const val CHANNEL_ACTIVE = "active"
+    private const val CHANNEL_WAITING = "waiting"
+    private const val CHANNEL_COMPLETE = "complete"
 
     private fun getUploadTitle(res: Resources, info: UploadRecord): CharSequence {
       val title = info.NotificationTitle
@@ -214,8 +199,6 @@ internal class UploadNotifier(private val mContext: Context) {
   internal enum class NotificationStatus {
     WAITING,
     ACTIVE,
-    FAILED,
-    COMPLETE,
-    UNKNOWN
+    COMPLETE
   }
 }
