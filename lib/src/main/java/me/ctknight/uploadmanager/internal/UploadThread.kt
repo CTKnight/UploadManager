@@ -6,7 +6,6 @@ package me.ctknight.uploadmanager.internal
 
 import android.app.job.JobParameters
 import android.content.Context
-import android.database.sqlite.SQLiteClosable
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -14,12 +13,12 @@ import android.os.Process
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.getSystemService
-import com.zhy.http.okhttp.request.CountingRequestBody
 import me.ctknight.uploadmanager.UploadContract
 import me.ctknight.uploadmanager.UploadContract.UploadStatus.*
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadJobService
 import me.ctknight.uploadmanager.UploadRecord
+import me.ctknight.uploadmanager.thirdparty.CountingRequestBody
 import me.ctknight.uploadmanager.util.LogUtils
 import me.ctknight.uploadmanager.util.OkHttpUtils
 import okhttp3.*

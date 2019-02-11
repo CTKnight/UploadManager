@@ -8,6 +8,7 @@ import android.content.Context
 import me.ctknight.uploadmanager.UploadContract
 import me.ctknight.uploadmanager.UploadDatabase
 import me.ctknight.uploadmanager.UploadRecord
+import java.util.concurrent.TimeUnit
 
 // only update the parts that refresh through
 internal fun UploadRecord.partialUpdate(database: UploadDatabase) {
@@ -23,21 +24,8 @@ internal fun UploadRecord.partialUpdate(database: UploadDatabase) {
   )
 }
 
-internal fun UploadRecord.isReadyToUpload(): Boolean {
-  TODO()
-}
-
-internal fun UploadRecord.sendIntentIfRequested(context: Context) {
-  TODO()
-}
-
-internal fun UploadRecord.notifyQueryForNetwork(b: Boolean) {
-  TODO()
-}
-
-internal fun UploadRecord.checkNetworkState(context: Context): UploadContract.NetworkState {
-  TODO()
-}
+internal fun UploadRecord.isReadyToSchdule(): Boolean =
+    Status.isReadyToSchedule()
 
 internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus? {
   if (Visibility !in
@@ -55,7 +43,6 @@ internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatu
       }
     }
   }
-
 }
 
 internal fun UploadRecord.updateFromDatabase(database: UploadDatabase): UploadRecord? {
@@ -66,8 +53,30 @@ internal fun UploadRecord.nextActionMillis(now: Long): Long {
   TODO()
 }
 
-// TODO: dummy impl
 internal fun UploadRecord.isMeteredAllowed(context: Context) = this.MeteredAllowed
 
-
 internal fun UploadRecord.isRoamingAllowed(context: Context) = this.RoamingAllowed
+
+// TODO: dummy
+internal fun UploadRecord.isVisible(): Boolean = true
+
+internal fun UploadRecord.minLatency(): Long {
+  val now = System.currentTimeMillis()
+  val retryAfter = RetryAfter
+  val lastMod = LastModification ?: now
+  val startAfter: Long =
+      if (NumFailed == 0L) {
+        now
+      } else if (retryAfter != null && retryAfter > 0) {
+        lastMod + fuzzDelay(retryAfter)
+      } else {
+        // expon delay
+        val delay = TimeUnit.SECONDS.toMillis(UploadContract.Constants.MIN_RETRY_AFTER) *
+            (1L shl (NumFailed - 1).toInt())
+        lastMod + fuzzDelay(delay)
+      }
+  return Math.max(0, startAfter - now)
+}
+
+internal fun fuzzDelay(delay: Long): Long =
+    delay + Helpers.sRandom.nextInt(delay.toInt() / 2)

@@ -6,18 +6,15 @@ package me.ctknight.uploadmanager
 
 
 import android.content.Context
-import android.net.Uri
 import me.ctknight.uploadmanager.internal.Database
-import me.ctknight.uploadmanager.thirdparty.FileUtils
+import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
-import me.ctknight.uploadmanager.util.UriUtils
 import okhttp3.Headers
 import okhttp3.HttpUrl
-import java.io.File
 import java.util.*
 
 
-class UploadManager private constructor(context: Context) {
+class UploadManager private constructor(val context: Context) {
   private val mBaseUri = UploadContract.UPLOAD_CONTENT_URI
   private val mDatabase = Database.getInstance(context)
 
@@ -37,6 +34,7 @@ class UploadManager private constructor(context: Context) {
       )
       id = mDatabase.uploadManagerQueries.lastInsertId().executeAsOne()
     }
+    Helpers.scheduleJob(context, id)
     return id
   }
 

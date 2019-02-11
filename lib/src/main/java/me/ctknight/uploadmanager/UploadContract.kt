@@ -46,12 +46,12 @@ object UploadContract {
      * The minimum amount of time that the upload manager accepts for
      * a Retry-After response header with a parameter in delta-seconds.
      */
-    val MIN_RETRY_AFTER = 5 // 5s
+    val MIN_RETRY_AFTER = 5L // 5s
     /**
      * The maximum amount of time that the upload manager accepts for
      * a Retry-After response header with a parameter in delta-seconds.
      */
-    val MAX_RETRY_AFTER = 5 * 60 // 5 minutes
+    val MAX_RETRY_AFTER = 5 * 60L // 5 minutes
     /**
      * The time between a failure and the first retry after an IOException.
      * Each subsequent retry grows exponentially, doubling each time.
@@ -116,6 +116,8 @@ object UploadContract {
 
     internal fun isSuccess(): Boolean =
         statusCode == 200
+    internal fun isReadyToSchedule(): Boolean =
+        statusCode < 200 && this != PAUSED
   }
 
   enum class Visibility {
