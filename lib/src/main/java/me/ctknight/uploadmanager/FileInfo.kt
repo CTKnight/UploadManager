@@ -9,8 +9,8 @@ import okhttp3.MediaType
 
 data class FileInfo(
     val fileUri: Uri,
-    // TODO: default to be application/octet-stream
+    // default to be application/octet-stream
     // according to https://tools.ietf.org/html/rfc7578#section-4.4
-    val mimeType: MediaType?,
+    val mimeType: MediaType = MediaType.parse("application/octet-stream")!!,
     val fileName: String?
 )
