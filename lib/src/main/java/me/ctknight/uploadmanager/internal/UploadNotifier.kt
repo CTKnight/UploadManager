@@ -14,6 +14,7 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
+import android.util.Log
 import androidx.annotation.GuardedBy
 import androidx.collection.ArrayMap
 import androidx.collection.LongSparseArray
@@ -23,6 +24,7 @@ import androidx.core.content.getSystemService
 import androidx.core.content.res.ResourcesCompat
 import me.ctknight.uploadmanager.*
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
+import me.ctknight.uploadmanager.util.LogUtils
 
 
 //In AOSP Download Notifier,they use LongSparseLongArray,
@@ -89,7 +91,7 @@ internal class UploadNotifier(private val mContext: Context) {
         .groupBy {
           val notificationStatus = it.notificationStatus()
           return@groupBy when (notificationStatus) {
-            in shouldClusterStatus ->
+            in arrayOf(NotificationStatus.ACTIVE, NotificationStatus.WAITING) ->
               Pair(-1L, notificationStatus)
             else ->
               Pair(it._ID, notificationStatus)
@@ -134,9 +136,8 @@ internal class UploadNotifier(private val mContext: Context) {
     builder.setOnlyAlertOnce(true)
 
     // Calculate and show progress
-
+    val uploadIds = getUploadIds(cluster)
     if (type == NotificationStatus.ACTIVE || type == NotificationStatus.WAITING) {
-      val uploadIds = getUploadIds(cluster)
       val uri = Uri.Builder().scheme("active-ul")
           .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
       val intent = Intent(UploadContract.NotificationAction.List.actionString,
@@ -168,7 +169,30 @@ internal class UploadNotifier(private val mContext: Context) {
           PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0))
       builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
     } else if (type == NotificationStatus.COMPLETE) {
+      val record = cluster.firstOrNull()
+      if (record != null && id != -1L) {
+        val uri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, id)
+        builder.setAutoCancel(true)
+        val action =
+            if (record.Status.isFailed()) {
+              UploadContract.NotificationAction.List
+            } else {
+              UploadContract.NotificationAction.Open
+            }
 
+        val intent = Intent(action.actionString, uri, mContext, UploadReceiver::class.java)
+        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS, uploadIds)
+        builder.setContentIntent(PendingIntent.getBroadcast(mContext,
+            0, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+
+        val hideIntent = Intent(UploadContract.NotificationAction.Hide.actionString,
+            uri, mContext, UploadReceiver::class.java)
+        hideIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        builder.setDeleteIntent(PendingIntent.getBroadcast(mContext, 0, hideIntent, 0))
+      } else {
+        Log.d(TAG, "The cluster of $tag is empty.")
+      }
     }
   }
 
@@ -181,6 +205,8 @@ internal class UploadNotifier(private val mContext: Context) {
     private const val CHANNEL_ACTIVE = "active"
     private const val CHANNEL_WAITING = "waiting"
     private const val CHANNEL_COMPLETE = "complete"
+
+    private val TAG = LogUtils.makeTag<UploadNotifier>()
 
     private fun getUploadTitle(res: Resources, info: UploadRecord): CharSequence {
       val title = info.NotificationTitle

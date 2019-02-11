@@ -102,7 +102,6 @@ object UploadContract {
     internal fun isOnGoing(): Boolean =
         this == RUNNING
 
-
     internal fun isDeletedOrCanceled(): Boolean = this == DELETED || this == CANCELED
 
     /**
@@ -112,10 +111,8 @@ object UploadContract {
     internal fun isCompleted(): Boolean =
         statusCode in 200..300 || statusCode in 400..600
 
-
     internal fun isFailed(): Boolean =
-      statusCode >= 300
-
+        statusCode >= 300
   }
 
   enum class Visibility {
