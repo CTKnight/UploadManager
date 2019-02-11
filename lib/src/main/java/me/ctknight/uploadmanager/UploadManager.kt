@@ -5,10 +5,7 @@
 package me.ctknight.uploadmanager
 
 
-import android.content.ContentUris
-import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import me.ctknight.uploadmanager.internal.Database
 import me.ctknight.uploadmanager.thirdparty.FileUtils
@@ -56,35 +53,17 @@ class UploadManager private constructor(context: Context) {
   }
 
   // TODO
-  fun query(query: Query): List<UploadRecord> {
-    return emptyList()
+  fun query(query: UploadManager.Query): com.squareup.sqldelight.Query<List<UploadRecord>> {
+    TODO()
   }
 
   fun restartUpload(vararg ids: Long) {
-    val cursor = query(Query().setFilterById(*ids))
-    try {
-      cursor!!.moveToFirst()
-      while (!cursor.isAfterLast) {
-        val status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS))
-        if (status != STATUS_FAILED && status != STATUS_CANCELLED) {
-          throw IllegalArgumentException("Cannot restart incomplete upload: " + cursor.getLong(cursor.getColumnIndex(COLUMN_ID)))
-        }
-        cursor.moveToNext()
+    mDatabase.transaction {
+      ids.forEach {
+        mDatabase.uploadManagerQueries.restartUpload(0, -1,
+            UploadContract.UploadStatus.PENDING, 0, null, it)
       }
-    } finally {
-      cursor!!.close()
     }
-
-    val values = ContentValues()
-    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_CURRENT_BYTES, 0)
-    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_TOTAL_BYTES, -1)
-    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_STATUS, UploadContract.UPLOAD_STATUS.PENDING)
-    values.put(UploadContract.UPLOAD_COLUMNS.COLUMN_NUM_FAILED, 0)
-    mResolver.update(mBaseUri, values, getWhereClauseForIds(ids), getWhereArgsForIds(ids))
-  }
-
-  fun getUploadUri(id: Long): Uri {
-    return ContentUris.withAppendedId(mBaseUri, id)
   }
 
   class Request internal constructor(builder: Builder) {
@@ -117,59 +96,7 @@ class UploadManager private constructor(context: Context) {
     }
   }
 
-  fun updateFilename(uri: Uri?) {
-    val fullPath = FileUtils.getPath(mContext, uri)
-    if (fullPath != null) {
-      mFilename = File(fullPath).name
-    } else {
-      val info = UriUtils.queryOpenableInfo(uri, mContext)
-      if (info != null) {
-        mFilename = info.displayName
-      }
-    }
-  }
-
-  /**
-   * This class may be used to filter upload manager queries.
-   */
-  class Query {
-
-    private var mIds: LongArray? = null
-    private var mStatusFlags: Int? = null
-    private var mOrderByColumn = COLUMN_LAST_MODIFICATION
-    private var mOrderDirection = ORDER_DESCENDING
-
-    /**
-     * Include only the uploads with the given IDs.
-     *
-     * @return this object
-     */
-    fun setFilterById(vararg ids: Long): Query {
-      mIds = ids
-      return this
-    }
-
-    /**
-     * Include only uploads with status matching any the given status flags.
-     *
-     * @param flags any combination of the * bit flags
-     * @return this object
-     */
-    fun setFilterByStatus(flags: Int): Query {
-      mStatusFlags = flags
-      return this
-    }
-
-    /**
-     * Run this query using the given ContentResolver.
-     *
-     * @param projection the projection to pass to ContentResolver.query()
-     * @return the Cursor returned by ContentResolver.query()
-     */
-    internal fun runQuery(database: UploadDatabase): List<UploadRecord> {
-      TODO()
-    }
-  }
+  class Query {}
 
   companion object {
     private object InstanceHolder : SingletonHolder<UploadManager, Context>(::UploadManager)
