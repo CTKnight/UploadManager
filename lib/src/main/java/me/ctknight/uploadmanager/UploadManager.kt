@@ -25,59 +25,39 @@ class UploadManager private constructor(context: Context) {
   private val mDatabase = Database.getInstance(context)
 
   fun enqueue(request: Request): Long {
-    TODO()
+    var id: Long = -1
+    mDatabase.transaction {
+      mDatabase.uploadManagerQueries.insertUpload(
+          request.targetUrl,
+          request.userAgent,
+          request.headers,
+          request.parts,
+          request.title,
+          request.description,
+          request.notificationVisibility,
+          request.meteredAllowed,
+          request.roamingAllowed
+      )
+      id = mDatabase.uploadManagerQueries.lastInsertId().executeAsOne()
+    }
+    return id
   }
 
-  fun cancel(vararg ids: Long): Int {
+  fun cancel(vararg ids: Long) {
     if (ids.isEmpty()) {
       // called with nothing to remove!
       throw IllegalArgumentException("input param 'ids' can't be null")
     }
-    TODO()
+    mDatabase.transaction {
+      ids.forEach {
+        mDatabase.uploadManagerQueries.updateStatus(UploadContract.UploadStatus.CANCELED, it)
+      }
+    }
   }
 
+  // TODO
   fun query(query: Query): List<UploadRecord> {
-    TODO()
-  }
-
-  fun getUriForUploadedFile(id: Long): Uri? {
-    // to check if the file is in cache, get its destination from the database
-    val query = Query().setFilterById(id)
-    var cursor: Cursor? = null
-    try {
-      cursor = query(query)
-      if (cursor == null) {
-        return null
-      }
-      if (cursor.moveToFirst()) {
-        val status = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_STATUS))
-        if (UploadManager.ERROR_FILE_ERROR != status) {
-          return ContentUris.withAppendedId(UploadContract.UPLOAD_URIS.CONTENT_URI, id)
-        }
-      }
-    } finally {
-      cursor?.close()
-    }
-    // uploaded file not found or its status is not 'successfully completed'
-    return null
-  }
-
-  fun getMimeTypeForUploadedFile(id: Long): String? {
-    val query = Query().setFilterById(id)
-    var cursor: Cursor? = null
-    try {
-      cursor = query(query)
-      if (cursor == null) {
-        return null
-      }
-      while (cursor.moveToFirst()) {
-        return cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEDIA_TYPE))
-      }
-    } finally {
-      cursor?.close()
-    }
-    //uploaded file not found or its status is not 'successfully completed'
-    return null
+    return emptyList()
   }
 
   fun restartUpload(vararg ids: Long) {
@@ -119,7 +99,7 @@ class UploadManager private constructor(context: Context) {
     internal val userAgent: String? = builder.userAgent
     internal val meteredAllowed: Boolean = builder.meteredAllowed
     internal val roamingAllowed: Boolean = builder.roamingAllowed
-    internal val mNotificationVisibility: UploadContract.Visibility = builder.notificationVisibility
+    internal val notificationVisibility: UploadContract.Visibility = builder.notificationVisibility
 
     data class Builder(
         val targetUrl: HttpUrl,
@@ -137,112 +117,6 @@ class UploadManager private constructor(context: Context) {
     }
   }
 
-  /**
-   * Set the local destination for the uploaded file. Must be a file URI to a path on
-   * external storage, and the calling application must have the WRITE_EXTERNAL_STORAGE
-   * permission.
-   *
-   *
-   * The uploaded file is not scanned by MediaScanner.
-   * But it can be made scannable by calling { #allowScanningByMediaScanner()}.
-   *
-   *
-   * By default, uploads are saved to a generated filename in the shared upload cache and
-   * may be deleted by the system at any time to reclaim space.
-   *
-   * @return this object
-   */
-  fun setFileUri(uri: Uri): Request {
-    mFileUri = uri
-
-    return this
-  }
-
-  /**
-   * Add an HTTP header to be included with the upload request.  The header will be added
-   * to
-   * the end of the list.
-   *
-   * @param header HTTP header name
-   * @param value  header value
-   * @return this object
-   * @see [HTTP/1.1
-   * Message Headers](http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html.sec4.2)
-   */
-  private fun setRequestHeaders(headers: Headers): Request {
-    mRequestHeaders = headers
-    return this
-  }
-
-  fun addPart(part: Part): Request {
-    mParts.add(part)
-    return this
-  }
-
-  fun setUserAgent(userAgent: String): Request {
-    mUserAgent = userAgent
-    return this
-  }
-
-  /**
-   * Set the title of this upload, to be displayed in notifications (if enabled).  If no
-   * title is given, a default one will be assigned based on the upload filename, once the
-   * upload starts.
-   *
-   * @return this object
-   */
-  fun setTitle(title: String): Request {
-    mTitle = title
-    return this
-  }
-
-  /**
-   * Set a description of this upload, to be displayed in notifications (if enabled)
-   *
-   * @return this object
-   */
-  fun setDescription(description: String): Request {
-    mDescription = description
-    return this
-  }
-
-  /**
-   * Control whether a system notification is posted by the upload manager while this
-   * upload is running or when it is completed.
-   * If enabled, the upload manager posts notifications about uploads
-   * through the system [android.app.NotificationManager].
-   * By default, a notification is shown only when the upload is in progress.
-   *
-   *
-   * It can take the following values: [.VISIBILITY_HIDDEN],
-   * [.VISIBILITY_VISIBLE],
-   * [.VISIBILITY_VISIBLE_COMPLETED].
-   *
-   *
-   * If set to [.VISIBILITY_HIDDEN], this requires the permission
-   * android.permission.UPLOAD_WITHOUT_NOTIFICATION.
-   *
-   * @param visibility the visibility setting value
-   * @return this object
-   */
-  fun setNotificationVisibility(visibility: UploadContract.Visibility): Request {
-    if ()
-      mNotificationVisibility = visibility
-    return this
-  }
-
-  /**
-   * Set whether this upload may proceed over a roaming connection.  By default, roaming is
-   * allowed.
-   *
-   * @param allowed whether to allow a roaming connection to be used
-   * @return this object
-   */
-  fun setAllowedOverRoaming(allowed: Boolean): Request {
-    mMobileAllowed = allowed
-    return this
-  }
-
   fun updateFilename(uri: Uri?) {
     val fullPath = FileUtils.getPath(mContext, uri)
     if (fullPath != null) {
@@ -255,109 +129,83 @@ class UploadManager private constructor(context: Context) {
     }
   }
 
+  /**
+   * This class may be used to filter upload manager queries.
+   */
+  class Query {
+
+    private var mIds: LongArray? = null
+    private var mStatusFlags: Int? = null
+    private var mOrderByColumn = COLUMN_LAST_MODIFICATION
+    private var mOrderDirection = ORDER_DESCENDING
+
+    /**
+     * Include only the uploads with the given IDs.
+     *
+     * @return this object
+     */
+    fun setFilterById(vararg ids: Long): Query {
+      mIds = ids
+      return this
+    }
+
+    /**
+     * Include only uploads with status matching any the given status flags.
+     *
+     * @param flags any combination of the * bit flags
+     * @return this object
+     */
+    fun setFilterByStatus(flags: Int): Query {
+      mStatusFlags = flags
+      return this
+    }
+
+    /**
+     * Run this query using the given ContentResolver.
+     *
+     * @param projection the projection to pass to ContentResolver.query()
+     * @return the Cursor returned by ContentResolver.query()
+     */
+    internal fun runQuery(database: UploadDatabase): List<UploadRecord> {
+      TODO()
+    }
+  }
+
   companion object {
+    private object InstanceHolder : SingletonHolder<UploadManager, Context>(::UploadManager)
+
     /**
-     * This upload is visible but only shows in the notifications
-     * while it's in progress.
+     * The only to get a instance of UploadManager
+     * this method is thread safe
+     *
+     * @param context no need to be Application
+     * @return a singleton instance of UploadManager
      */
-    val VISIBILITY_VISIBLE = 0
+    @JvmStatic
+    val getUploadManager = InstanceHolder::getInstance
     /**
-     * This upload is visible and shows in the notifications while
-     * in progress and after completion.
+     * Broadcast intent action sent by the upload manager when a upload completes.
      */
-    val VISIBILITY_VISIBLE_COMPLETED = 1
+    val ACTION_UPLOAD_COMPLETE = "me.ctknight.uploadmanager.intent.action.UPLOAD_COMPLETE"
+
     /**
-     * This upload doesn't show in the UI or in the notifications.
+     * Broadcast intent action sent by the upload manager when the user clicks on a running
+     * upload, either from a system notification or from the uploads UI.
      */
-    val VISIBILITY_HIDDEN = 5
+    val ACTION_NOTIFICATION_CLICKED = "me.ctknight.uploadmanager.intent.action.UPLOAD_NOTIFICATION_CLICKED"
+
     /**
-     * This upload shows in the notifications after completion ONLY.
-     * It is usuable only with
-     * { UploadManager.addCompletedUpload(String, String,
-     * boolean, String, String, long, boolean)}.
+     * Intent extra included with [.ACTION_UPLOAD_COMPLETE] intents, indicating the ID (as a
+     * long) of the upload that just completed.
      */
-    val VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION = 3
+    val EXTRA_UPLOAD_ID = "extra_upload_id"
 
+    /**
+     * When clicks on multiple notifications are received, the following
+     * provides an array of upload ids corresponding to the upload notification that was
+     * clicked. It can be retrieved by the receiver of this
+     * Intent using [android.content.Intent.getLongArrayExtra].
+     */
+    val EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS = "extra_click_upload_ids"
   }
-}
-
-/**
- * This class may be used to filter upload manager queries.
- */
-class Query {
-
-  private var mIds: LongArray? = null
-  private var mStatusFlags: Int? = null
-  private var mOrderByColumn = COLUMN_LAST_MODIFICATION
-  private var mOrderDirection = ORDER_DESCENDING
-
-  /**
-   * Include only the uploads with the given IDs.
-   *
-   * @return this object
-   */
-  fun setFilterById(vararg ids: Long): Query {
-    mIds = ids
-    return this
-  }
-
-  /**
-   * Include only uploads with status matching any the given status flags.
-   *
-   * @param flags any combination of the * bit flags
-   * @return this object
-   */
-  fun setFilterByStatus(flags: Int): Query {
-    mStatusFlags = flags
-    return this
-  }
-
-  /**
-   * Run this query using the given ContentResolver.
-   *
-   * @param projection the projection to pass to ContentResolver.query()
-   * @return the Cursor returned by ContentResolver.query()
-   */
-  internal fun runQuery(database: UploadDatabase): List<UploadRecord> {
-    TODO()
-  }
-}
-
-companion object {
-  private object InstanceHolder : SingletonHolder<UploadManager, Context>(::UploadManager)
-
-  /**
-   * The only to get a instance of UploadManager
-   * this method is thread safe
-   *
-   * @param context no need to be Application
-   * @return a singleton instance of UploadManager
-   */
-  @JvmStatic
-  val getUploadManager = InstanceHolder::getInstance
-  /**
-   * Broadcast intent action sent by the upload manager when a upload completes.
-   */
-  val ACTION_UPLOAD_COMPLETE = "me.ctknight.uploadmanager.intent.action.UPLOAD_COMPLETE"
-
-  /**
-   * Broadcast intent action sent by the upload manager when the user clicks on a running
-   * upload, either from a system notification or from the uploads UI.
-   */
-  val ACTION_NOTIFICATION_CLICKED = "me.ctknight.uploadmanager.intent.action.UPLOAD_NOTIFICATION_CLICKED"
-
-  /**
-   * Intent extra included with [.ACTION_UPLOAD_COMPLETE] intents, indicating the ID (as a
-   * long) of the upload that just completed.
-   */
-  val EXTRA_UPLOAD_ID = "extra_upload_id"
-
-  /**
-   * When clicks on multiple notifications are received, the following
-   * provides an array of upload ids corresponding to the upload notification that was
-   * clicked. It can be retrieved by the receiver of this
-   * Intent using [android.content.Intent.getLongArrayExtra].
-   */
-  val EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS = "extra_click_upload_ids"
-}
 }

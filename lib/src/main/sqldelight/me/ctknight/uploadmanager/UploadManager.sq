@@ -22,18 +22,28 @@ CREATE TABLE UploadRecord (
   NotificationDescription   TEXT,
   TotalBytes   INTEGER NOT NULL DEFAULT -1,
   CurrentBytes   INTEGER NOT NULL DEFAULT -1,
-  Visibility   TEXT AS UploadContract.Visibility NOT NULL DEFAULT "VISIBLE",
+  Visibility   TEXT AS UploadContract.Visibility NOT NULL,
   ErrorMsg   TEXT,
---   TODO: use enum
-  NetworkOption   INTEGER AS Boolean NOT NULL DEFAULT 1,
+  MeteredAllowed   INTEGER AS Boolean NOT NULL DEFAULT 1,
+  RoamingAllowed   INTEGER AS Boolean NOT NULL DEFAULT 1,
   ServerResponse   TEXT
 );
 
 insertUpload:
 INSERT INTO UploadRecord
-(TargeUrl, UserAgent, Headers, Parts, NotificationTitle, NotificationDescription)
+(TargeUrl, UserAgent, Headers, Parts, NotificationTitle, NotificationDescription, Visibility,
+MeteredAllowed, RoamingAllowed)
 VALUES
-(?, ?, ?, ?, ?, ?);
+(?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+restartUpload:
+UPDATE UploadRecord SET
+  CurrentBytes = ?,
+  TotalBytes = ?,
+  Status = ?,
+  NumFailed = ?,
+  ServerResponse = ?
+WHERE _ID = ?;
 
 lastInsertId:
 SELECT last_insert_rowid();
