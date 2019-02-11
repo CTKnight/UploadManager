@@ -113,6 +113,9 @@ object UploadContract {
 
     internal fun isFailed(): Boolean =
         statusCode >= 300
+
+    internal fun isSuccess(): Boolean =
+        statusCode == 200
   }
 
   enum class Visibility {

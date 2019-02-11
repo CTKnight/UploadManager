@@ -4,6 +4,7 @@
 
 package me.ctknight.uploadmanager.internal
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -25,12 +26,16 @@ import androidx.core.content.res.ResourcesCompat
 import me.ctknight.uploadmanager.*
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import me.ctknight.uploadmanager.util.LogUtils
+import me.ctknight.uploadmanager.util.TimeUtils
+import java.text.NumberFormat
 
 
 //In AOSP Download Notifier,they use LongSparseLongArray,
 //actually,LongSparseArray is a generic version of LongSparseLongArray,
 //so LongSparseArray<Long> is totally same with LongSparseLongArray.
 internal class UploadNotifier(private val mContext: Context) {
+  private val resources: Resources
+    get() = mContext.resources
   //AOSP use final ,but I have to get current package name in a static method,so change it to static.
   private val mNotifManager: NotificationManagerCompat = NotificationManagerCompat.from(mContext)
 
@@ -47,18 +52,15 @@ internal class UploadNotifier(private val mContext: Context) {
   init {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val notificationManager: NotificationManager = mContext.getSystemService()!!
-      notificationManager.also {
-        it.createNotificationChannel(NotificationChannel(CHANNEL_ACTIVE,
+      with(notificationManager) {
+        createNotificationChannel(NotificationChannel(CHANNEL_ACTIVE,
             mContext.getText(R.string.upload_running),
             NotificationManager.IMPORTANCE_MIN))
-      }.also {
-        it.createNotificationChannel(NotificationChannel(CHANNEL_WAITING,
+        createNotificationChannel(NotificationChannel(CHANNEL_WAITING,
             mContext.getText(R.string.upload_queued),
             NotificationManager.IMPORTANCE_DEFAULT))
-      }.also {
-        it.createNotificationChannel(NotificationChannel(CHANNEL_COMPLETE,
-            mContext.getText(R.string.upload_complete),
-            NotificationManager.IMPORTANCE_DEFAULT))
+        createNotificationChannel(NotificationChannel(CHANNEL_COMPLETE,
+            mContext.getText(R.string.upload_complete), NotificationManager.IMPORTANCE_DEFAULT))
       }
     }
   }
@@ -109,9 +111,12 @@ internal class UploadNotifier(private val mContext: Context) {
     }
   }
 
-  private fun buildClusterNotification(tag: Pair<Long, NotificationStatus?>, cluster: Iterable<UploadRecord>) {
+  private fun buildClusterNotification(tag: Pair<Long, NotificationStatus?>, cluster: List<UploadRecord>) {
     val (id, type) = tag
     type ?: return
+    if (cluster.isEmpty()) {
+      return
+    }
     val res = mContext.resources
 
     val channel = when (type) {
@@ -181,19 +186,107 @@ internal class UploadNotifier(private val mContext: Context) {
             }
 
         val intent = Intent(action.actionString, uri, mContext, UploadReceiver::class.java)
-        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
         intent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS, uploadIds)
         builder.setContentIntent(PendingIntent.getBroadcast(mContext,
             0, intent, PendingIntent.FLAG_UPDATE_CURRENT))
 
         val hideIntent = Intent(UploadContract.NotificationAction.Hide.actionString,
             uri, mContext, UploadReceiver::class.java)
-        hideIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        hideIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
         builder.setDeleteIntent(PendingIntent.getBroadcast(mContext, 0, hideIntent, 0))
       } else {
         Log.d(TAG, "The cluster of $tag is empty.")
       }
     }
+
+    val (percent, remainingText, percentText) = buildActiveInfo(cluster)
+    if (type == NotificationStatus.ACTIVE) {
+      // set progress bar if it's active upload
+      builder.setProgress(100, Math.min(0, percent), percent < 0)
+    }
+
+    val notification: Notification
+    if (cluster.size == 1) {
+      val record = cluster.first()
+      builder.setContentTitle(getUploadTitle(res, record))
+      when (type) {
+        NotificationStatus.ACTIVE -> {
+          if (!record.NotificationDescription.isNullOrEmpty()) {
+            builder.setContentText(record.NotificationDescription)
+          } else {
+            builder.setContentText(remainingText)
+          }
+          builder.setContentInfo(percentText)
+        }
+        NotificationStatus.WAITING -> {
+          builder.setContentText(
+              resources.getString(R.string.notification_waiting_for_suitable_network)
+          )
+        }
+        NotificationStatus.COMPLETE -> {
+          if (record.Status.isFailed()) {
+            builder.setContentText(resources.getString(R.string.notification_upload_unsuccessfully))
+          } else if (record.Status.isSuccess()) {
+            builder.setContentText(resources.getString(R.string.notification_upload_successfully))
+          }
+        }
+      }
+      notification = builder.build()
+    } else {
+      val inboxStyle = NotificationCompat.InboxStyle(builder)
+      cluster.forEach { inboxStyle.addLine(getUploadTitle(res, it)) }
+
+      if (type == NotificationStatus.ACTIVE) {
+        builder.setContentTitle(res.getQuantityString(
+            R.plurals.notif_summary_active, cluster.size, cluster.size))
+        builder.setContentText(remainingText)
+        builder.setContentInfo(percentText)
+        inboxStyle.setSummaryText(remainingText)
+      } else if (type == NotificationStatus.WAITING) {
+        builder.setContentTitle(
+            res.getQuantityString(R.plurals.notif_summary_waiting, cluster.size, cluster.size))
+        builder.setContentText(
+            res.getString(R.string.notification_waiting_for_suitable_network))
+        inboxStyle.setSummaryText(
+            res.getString(R.string.notification_waiting_for_suitable_network))
+      }
+      notification = inboxStyle.build()
+    }
+
+    mNotifManager.notify(tag.toString(), 0, notification)
+  }
+
+  // <percent, remainingText, percentText>
+  private fun buildActiveInfo(cluster: Iterable<UploadRecord>): Triple<Int, String?, String?> {
+    var remainingText: String? = null
+    var percentText: String? = null
+    var percent = -1
+
+    var current: Long = 0
+    var total: Long = 0
+    var speed: Long = 0
+    synchronized(mUploadSpeed) {
+      val knownSizeCluster = cluster.filter { it.TotalBytes != -1L }
+      current = knownSizeCluster.sumBy { it.CurrentBytes.toInt() }.toLong()
+      total = knownSizeCluster.sumBy { it.TotalBytes.toInt() }.toLong()
+      speed = knownSizeCluster.sumBy { mUploadSpeed[it._ID]?.first?.toInt() ?: 0 }.toLong()
+    }
+
+    if (total > 0) {
+      percentText = NumberFormat.getPercentInstance().format(current.toDouble() / total)
+
+      if (speed > 0) {
+        val remainingMillis = (total - current) * 1000 / speed
+
+        remainingText = resources.getString(R.string.upload_remaining,
+            TimeUtils.formatDuration(remainingMillis, resources))
+      }
+
+      percent = (current * 100 / total).toInt()
+    }
+
+    return Triple(percent, remainingText, percentText)
   }
 
   companion object {
