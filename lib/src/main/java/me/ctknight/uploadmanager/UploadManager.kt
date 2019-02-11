@@ -31,7 +31,7 @@ class UploadManager private constructor(context: Context) {
     TODO()
   }
 
-  fun remove(vararg ids: Long): Int {
+  fun cancel(vararg ids: Long): Int {
     if (ids.isEmpty()) {
       // called with nothing to remove!
       throw IllegalArgumentException("input param 'ids' can't be null")

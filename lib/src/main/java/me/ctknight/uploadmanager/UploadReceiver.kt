@@ -9,11 +9,12 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.os.AsyncTask
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import me.ctknight.uploadmanager.internal.Database
+import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.partialUpdate
 import me.ctknight.uploadmanager.util.LogUtils
 import me.ctknight.uploadmanager.util.OpenHelper
@@ -22,11 +23,12 @@ import me.ctknight.uploadmanager.util.ToastUtils
 class UploadReceiver : BroadcastReceiver() {
   private lateinit var context: Context
   private lateinit var database: UploadDatabase
-
+  private lateinit var uploadManager: UploadManager
   override fun onReceive(context: Context, intent: Intent) {
 
     this.context = context
     this.database = Database.getInstance(context)
+    this.uploadManager = UploadManager.getUploadManager(context)
     val actionString = intent.action
     val action = UploadContract.NotificationAction.values()
         .firstOrNull { it.actionString == actionString }
@@ -37,8 +39,6 @@ class UploadReceiver : BroadcastReceiver() {
       if (info != null && info.isConnected) {
         startService()
       }
-    } else if (UploadContract.NotificationAction.Retry == action) {
-      startService()
     } else if (action != null) {
 
       val result = goAsync()
@@ -46,7 +46,7 @@ class UploadReceiver : BroadcastReceiver() {
       if (result == null) {
         handleNotificationBroadcast(action, intent)
       } else {
-        AsyncTask.THREAD_POOL_EXECUTOR.execute {
+        Helpers.sAsyncHandler.post {
           handleNotificationBroadcast(action, intent)
           result.finish()
         }
@@ -72,8 +72,10 @@ class UploadReceiver : BroadcastReceiver() {
         hideNotification(id)
       }
       UploadContract.NotificationAction.Cancel -> {
-        val id = ContentUris.parseId(intent.data)
-        cancelUpload(id)
+        val ids = intent.getLongArrayExtra(EXTRA_CANCELED_UPLOAD_IDS)
+        val tag = intent.getStringExtra(EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG)
+        cancelUpload(ids)
+        NotificationManagerCompat.from(context).cancel(tag, 0)
       }
       UploadContract.NotificationAction.Retry -> {
         // TODO: scheduled retry
@@ -85,12 +87,12 @@ class UploadReceiver : BroadcastReceiver() {
     }
   }
 
-  private fun cancelUpload(id: Long) {
-    UploadManager.getUploadManager(context).remove(id)
+  private fun cancelUpload(id: LongArray) {
+    uploadManager.cancel(*id)
   }
 
   private fun redoUpload(id: Long) {
-    UploadManager.getUploadManager(context).restartUpload(id)
+    uploadManager.restartUpload(id)
   }
 
   private fun hideNotification(id: Long) {
@@ -104,7 +106,7 @@ class UploadReceiver : BroadcastReceiver() {
     }
     status = record.Status
     visibility = record.Visibility
-    if (status.isComplete() || status.isFailed() &&
+    if (status.isCompleted() &&
         (visibility == UploadContract.Visibility.VISIBLE_COMPLETE || visibility == UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE))
       (record as UploadRecord.Impl).copy(Visibility = visibility).partialUpdate(database)
   }
@@ -122,24 +124,16 @@ class UploadReceiver : BroadcastReceiver() {
   private fun sendNotificationClickIntent(ids: LongArray) {
 
     if (ids.isEmpty()) {
-      Log.d(TAG, "sendNotificationClickIntent: clicked a notification with no id")
+      Log.w(TAG, "sendNotificationClickIntent: clicked a notification with no id")
     }
-    val uri = ContentUris.withAppendedId(
-        UploadContract.UPLOAD_CONTENT_URI, ids[0])
     val appIntent = Intent(UploadManager.ACTION_NOTIFICATION_CLICKED)
     appIntent.putExtra(UploadManager.EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS, ids)
     appIntent.setPackage(context.packageName)
-
-    if (ids.size == 1) {
-      appIntent.data = uri
-    } else {
-      appIntent.data = UploadContract.UPLOAD_CONTENT_URI
-    }
     context.sendBroadcast(appIntent)
   }
 
   private fun startService() {
-    context.startService(Intent(context, UploadService::class.java))
+    context.startService(Intent(context, UploadJobService::class.java))
   }
 
   companion object {

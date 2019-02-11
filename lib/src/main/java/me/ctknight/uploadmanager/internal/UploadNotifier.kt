@@ -169,13 +169,14 @@ internal class UploadNotifier(private val mContext: Context) {
       cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_IDS, uploadIds)
       cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG, tag.toString())
 
-      builder.addAction(R.drawable.ic_clear_black_24dp,
+      builder.addAction(android.R.drawable.ic_menu_close_clear_cancel,
           mContext.getString(R.string.notification_action_cancel),
           PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0))
       builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
     } else if (type == NotificationStatus.COMPLETE) {
       val record = cluster.firstOrNull()
       if (record != null && id != -1L) {
+        // TODO: add redo for failed uploads
         val uri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, id)
         builder.setAutoCancel(true)
         val action =
