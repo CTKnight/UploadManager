@@ -1,52 +1,56 @@
 # UploadManager (Alpha)
 A Multipart upload solution on Android, including progress notification and network change.
-This is a project based on AOSP DownloadManager, I implement this using OkHttp3.
+This is a project based on AOSP DownloadManager and I made this with kotlin and OkHttp3.
 
 ------
 
-## Usage: Much like AOSP's DownloadManger, but you should specify your `ContentDisposition` and `DataFieldName`
+## Usage
 
 * get a instance of UploadManager
+```kotlin
+    val uploadManager: UploadManager = UploadManager.getUploadManger(context);
 ```
-    UploadManager uploadManager = UploadManager.getUploadManger(context);
-```
+The best practise is to call `UploadManager.getUploadManger(context)` as early as you need to display
+notifications related to upload tasks
 
 * upload
-```
-    UploadManager.Request request = new UploadManager.Request(BoxUtils.UPLOAD_URI, context)
-    request.setFileUri(uri)
-          .setDataFieldName("file")
-          .setMimeType(info.mimeType)
-          .addContentDisposition(name1, value1)
-          .addContentDisposition(name2, value2)
-          .addUserAgent(yourUA);
-          // and much more options!
-        // return a upload id and you can find the upload task
-    long uploadId = uploadManger.enqueue(request);
+```kotlin
+    val uri = Uri.parse(fileUri)
+    val parts = listOf(
+    // parts with name-value pairs
+        Part("filecount", "1"),
+        Part("predefine", "1"),
+        Part("token", code),
+        Part("secret", password),
+    // parts with files
+        Part("file", fileInfo =  FileInfo(uri, MediaType.parse(info.mimeType
+                    ?: "application/octet-stream"), info.fileName))
+    )
+    // customized headers
+    val headers = Headers.of(mutableMapOf(Pair("User-Agent", "Box Android")))
+    val request = UploadManager.Request.Builder(
+        HttpUrl.get(BoxUtils.UPLOAD_URI.toString()),
+        parts,
+        headers
+    )
+
+    uploadManage.enqueue(request.build())
 ```
 
-* cancel or delete a upload task
-```
-    uploadManger.remove(uploadId);
-```
-
-* get the uri to a upload task
-```
-    uploadManger.getUriForUploadedFile(uploadId);
+* cancel a upload task
+```kotlin
+    uploadManger.cancel(uploadId);
 ```
 
 * restart a upload task
-```
+```kotlin
     uploadManger.restartUpload(uploadId);
 ```
 
 * query a upload task
-```
-    UploadManager.Query query = new UploadManager.Query().setFilterById(id);
-    Cursor cursor = UploadManager.getUploadManger(context).query(query);
-    // you can get title, file uri, total bytes, current uploaded bytes etc.
-    // Please view columns in UploadManager source!
-```
+
+TODO
+
 ------
 
 ## proguard
