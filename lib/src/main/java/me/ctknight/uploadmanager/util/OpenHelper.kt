@@ -7,12 +7,8 @@ package me.ctknight.uploadmanager.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
-import android.net.Uri
 import android.util.Log
-import me.ctknight.uploadmanager.UploadManager
 import me.ctknight.uploadmanager.internal.Database
-import java.io.File
 
 object OpenHelper {
   private val TAG = LogUtils.makeTag<OpenHelper>()
@@ -51,8 +47,6 @@ object OpenHelper {
    * subtleties around installing packages.
    */
   private fun buildViewIntent(context: Context, id: Long): Intent? {
-    val uploadManager = UploadManager.getUploadManager(context)
-
     val record = Database.getInstance(context).uploadManagerQueries
         .selectById(id).executeAsOneOrNull()
     record ?: return null

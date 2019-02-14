@@ -8,6 +8,6 @@ package me.ctknight.uploadmanager
 // value and fileInfo can not be both null
 data class Part(
     internal val name: String,
-    internal val value: String?,
-    internal val fileInfo: FileInfo?
+    internal val value: String? = null,
+    internal val fileInfo: FileInfo? = null
 )

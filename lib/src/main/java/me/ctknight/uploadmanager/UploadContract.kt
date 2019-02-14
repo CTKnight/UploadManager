@@ -24,7 +24,7 @@ object UploadContract {
     }
   }
 
-
+  @JvmField
   val UPLOAD_CONTENT_URI: Uri = Uri.parse("")
 
   object Constants {

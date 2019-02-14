@@ -69,8 +69,8 @@ class UploadManager private constructor(val context: Context) {
      * @param url the HTTP or HTTPS URI to upload.
      */
     internal val targetUrl: HttpUrl = builder.targetUrl
+    internal val parts: List<Part> = builder.parts
     internal val headers: Headers? = builder.headers
-    internal val parts: MutableList<Part> = builder.parts
     internal val title: String? = builder.title
     internal val description: String? = builder.description
     internal val userAgent: String? = builder.userAgent
@@ -80,8 +80,8 @@ class UploadManager private constructor(val context: Context) {
 
     data class Builder(
         val targetUrl: HttpUrl,
-        var headers: Headers,
-        val parts: MutableList<Part> = ArrayList(),
+        val parts: List<Part>,
+        var headers: Headers? = null,
         var title: String? = null,
         var description: String? = null,
         var userAgent: String? = null,
