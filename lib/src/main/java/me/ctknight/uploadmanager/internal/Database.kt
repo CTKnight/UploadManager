@@ -37,7 +37,7 @@ internal class Database {
       )
       val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
         override fun decode(databaseValue: String) =
-            HttpUrl.parse(databaseValue)!!
+            HttpUrl.get(databaseValue)
 
         override fun encode(value: HttpUrl) =
             value.toString()
