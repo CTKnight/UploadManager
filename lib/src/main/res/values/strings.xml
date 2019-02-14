@@ -22,18 +22,18 @@
     <string name="delete_confirm_positive_button">确认</string>
     <string name="delete_confirm_negative_button">取消</string>
     <plurals name="notif_summary_active">
-        <item quantity="one">1 个文件正在上传</item>
-        <item quantity="other"><xliff:g id="number">%d</xliff:g> 个文件在上传</item>
+        <item quantity="one">1 个任务正在上传</item>
+        <item quantity="other"><xliff:g id="number">%d</xliff:g> 个任务在上传</item>
     </plurals>
     <plurals name="notif_summary_waiting">
-        <item quantity="one">1 个文件在等待上传</item>
-        <item quantity="other"><xliff:g id="number">%d</xliff:g> 个文件在等待上传</item>
+        <item quantity="one">1 个任务在等待上传</item>
+        <item quantity="other"><xliff:g id="number">%d</xliff:g> 个任务在等待上传</item>
     </plurals>
     <plurals name="notif_summary_failed">
-        <item quantity="one">1 个文件上传失败</item>
+        <item quantity="one">1 个任务上传失败</item>
         <item quantity="other">
             <xliff:g id="number">%d</xliff:g>
-            个文件上传失败
+            个任务上传失败
         </item>
     </plurals>
 
