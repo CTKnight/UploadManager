@@ -107,8 +107,8 @@ class UploadReceiver : BroadcastReceiver() {
     status = record.Status
     visibility = record.Visibility
     if (status.isCompleted() &&
-        (visibility == UploadContract.Visibility.VISIBLE_COMPLETE || visibility == UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE))
-      (record as UploadRecord.Impl).copy(Visibility = visibility).partialUpdate(database)
+        (visibility == UploadContract.Visibility.VISIBLE_COMPLETE))
+      (record as UploadRecord.Impl).copy(Visibility = UploadContract.Visibility.HIDDEN_COMPLETE).partialUpdate(database)
   }
 
   /**

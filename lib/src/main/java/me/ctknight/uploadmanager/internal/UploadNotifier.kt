@@ -94,7 +94,7 @@ internal class UploadNotifier(private val mContext: Context) {
           val notificationStatus = it.notificationStatus()
           return@groupBy when (notificationStatus) {
             in arrayOf(NotificationStatus.ACTIVE, NotificationStatus.WAITING) ->
-              Pair(-1L, notificationStatus)
+              Pair(it._ID, notificationStatus)
             else ->
               Pair(it._ID, notificationStatus)
           }
@@ -166,12 +166,12 @@ internal class UploadNotifier(private val mContext: Context) {
           UploadReceiver::class.java
       )
       cancelIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-      cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_IDS, uploadIds)
+      cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_IDS, uploadIds.clone())
       cancelIntent.putExtra(UploadReceiver.EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG, tag.toString())
 
       builder.addAction(android.R.drawable.ic_menu_close_clear_cancel,
           mContext.getString(R.string.notification_action_cancel),
-          PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0))
+          PendingIntent.getBroadcast(mContext, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT))
       builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
     } else if (type == NotificationStatus.COMPLETE) {
       val record = cluster.firstOrNull()
@@ -204,7 +204,7 @@ internal class UploadNotifier(private val mContext: Context) {
     val (percent, remainingText, percentText) = buildActiveInfo(cluster)
     if (type == NotificationStatus.ACTIVE) {
       // set progress bar if it's active upload
-      builder.setProgress(100, Math.min(0, percent), percent < 0)
+      builder.setProgress(100, Math.max(0, percent), percent < 0)
     }
 
     val notification: Notification
@@ -305,7 +305,8 @@ internal class UploadNotifier(private val mContext: Context) {
     private fun getUploadTitle(res: Resources, info: UploadRecord): CharSequence {
       val title = info.NotificationTitle
       return if (title.isNullOrEmpty()) {
-        res.getString(R.string.upload_unknown_upload_title)
+        // TODO: fix for multiple files
+        info.Parts.firstOrNull { it.fileInfo != null }?.fileInfo?.fileName ?: res.getString(R.string.upload_unknown_upload_title)
       } else {
         title
       }

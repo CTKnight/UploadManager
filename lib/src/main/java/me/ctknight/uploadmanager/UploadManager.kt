@@ -5,18 +5,27 @@
 package me.ctknight.uploadmanager
 
 
+import android.app.job.JobScheduler
 import android.content.Context
+import android.util.Log
+import androidx.core.content.getSystemService
 import me.ctknight.uploadmanager.internal.Database
 import me.ctknight.uploadmanager.internal.Helpers
+import me.ctknight.uploadmanager.internal.UploadNotifier
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
+import me.ctknight.uploadmanager.util.LogUtils
 import okhttp3.Headers
 import okhttp3.HttpUrl
-import java.util.*
 
 
-class UploadManager private constructor(val context: Context) {
+class UploadManager private constructor(private val context: Context) {
   private val mBaseUri = UploadContract.UPLOAD_CONTENT_URI
   private val mDatabase = Database.getInstance(context)
+  private val mJobScheduler: JobScheduler = context.getSystemService()!!
+
+  init {
+    UploadNotifier.getInstance(context).update()
+  }
 
   fun enqueue(request: Request): Long {
     var id: Long = -1
@@ -43,11 +52,17 @@ class UploadManager private constructor(val context: Context) {
       // called with nothing to remove!
       throw IllegalArgumentException("input param 'ids' can't be null")
     }
-    mDatabase.transaction {
-      ids.forEach {
-        mDatabase.uploadManagerQueries.updateStatus(UploadContract.UploadStatus.CANCELED, it)
+    ids.forEach {
+      val info = mDatabase.uploadManagerQueries.selectById(it).executeAsOneOrNull()
+      if (info == null) {
+        Log.w(TAG, "cancel: record with id: $it is null")
+        return@forEach
+      }
+      if (!info.Status.isCompleted()) {
+        mJobScheduler.cancel(it.toInt())
       }
     }
+
   }
 
   // TODO
@@ -108,6 +123,7 @@ class UploadManager private constructor(val context: Context) {
      */
     @JvmStatic()
     fun getUploadManager(context: Context) = InstanceHolder.getInstance(context)
+
     /**
      * Broadcast intent action sent by the upload manager when a upload completes.
      */
@@ -132,5 +148,7 @@ class UploadManager private constructor(val context: Context) {
      * Intent using [android.content.Intent.getLongArrayExtra].
      */
     val EXTRA_NOTIFICATION_CLICK_UPLOAD_IDS = "extra_click_upload_ids"
+
+    private val TAG = LogUtils.makeTag<UploadManager>()
   }
 }

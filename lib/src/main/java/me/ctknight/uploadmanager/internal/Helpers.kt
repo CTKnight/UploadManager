@@ -49,6 +49,17 @@ internal object Helpers {
     if (latency > 0) {
       builder.setMinimumLatency(latency)
     }
+    if (record.MeteredAllowed && record.RoamingAllowed) {
+      builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+    } else if (!record.MeteredAllowed) {
+      builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+    } else if (!record.RoamingAllowed) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_NOT_ROAMING)
+      }
+    } else {
+      builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
       if (record.TotalBytes >= 0) {
         builder.setEstimatedNetworkBytes(0, record.TotalBytes)

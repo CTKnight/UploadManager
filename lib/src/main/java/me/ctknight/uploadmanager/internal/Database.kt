@@ -7,6 +7,7 @@ package me.ctknight.uploadmanager.internal
 import android.content.Context
 import android.net.Uri
 import android.util.JsonReader
+import android.util.JsonToken
 import android.util.JsonWriter
 import com.squareup.sqldelight.ColumnAdapter
 import com.squareup.sqldelight.EnumColumnAdapter
@@ -49,7 +50,7 @@ internal class Database {
           HeadersAdapter = object : ColumnAdapter<Headers, String> {
             override fun decode(databaseValue: String): Headers {
               val builder = Headers.Builder()
-              databaseValue.lines().forEach { builder.add(it) }
+              databaseValue.lines().filter { !it.isBlank() }.forEach { builder.add(it) }
               return builder.build()
             }
 
@@ -64,6 +65,7 @@ internal class Database {
               jsonReader.use {
                 with(it) {
                   beginArray()
+                  jsonLoop@
                   while (hasNext()) {
                     var name: String? = null
                     var value: String? = null
@@ -76,12 +78,20 @@ internal class Database {
                           name = nextString()
                         }
                         "value" -> {
-                          value = nextString()
+                          if (peek() == JsonToken.STRING) {
+                            value = nextString()
+                          } else {
+                            skipValue()
+                          }
                         }
                         "fileInfo" -> {
                           var fileName: String? = null
                           var mimeType: MediaType? = null
                           var fileUri: Uri? = null
+                          if (peek() != JsonToken.BEGIN_OBJECT) {
+                            skipValue()
+                            continue@jsonLoop
+                          }
                           beginObject()
                           while (hasNext()) {
                             when (nextName()) {
@@ -93,6 +103,9 @@ internal class Database {
                               }
                               "fileUri" -> {
                                 fileUri = Uri.parse(nextString())
+                              }
+                              else -> {
+                                skipValue()
                               }
                             }
                           }
@@ -129,14 +142,18 @@ internal class Database {
                   value.forEach {
                     beginObject()
                     name("name").value(it.name)
-                    name("value").value(it.value)
-                    name("fileInfo")
-                    if (it.fileInfo == null) {
-                      nullValue()
-                    } else {
+                    if (it.value != null) {
+                      name("value").value(it.value)
+                    }
+                    if (it.fileInfo != null) {
+                      name("fileInfo")
                       beginObject()
-                      name("fileName").value(it.fileInfo.fileName)
-                      name("mimeType").value(it.fileInfo.mimeType?.toString())
+                      if (it.fileInfo.fileName != null) {
+                        name("fileName").value(it.fileInfo.fileName)
+                      }
+                      if (it.fileInfo.mimeType != null) {
+                        name("mimeType").value(it.fileInfo.mimeType.toString())
+                      }
                       name("fileUri").value(it.fileInfo.fileUri.toString())
                       endObject()
                     }

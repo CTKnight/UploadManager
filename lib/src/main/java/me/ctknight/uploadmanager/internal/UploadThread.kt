@@ -67,6 +67,8 @@ internal class UploadThread(
       if (info != null) {
         mNetworkType = info.type
       }
+      mInfo = mInfo.copy(Status = RUNNING)
+      mInfo.partialUpdate(mDatabase)
 
       executeUpload()
 
@@ -122,6 +124,7 @@ internal class UploadThread(
     } finally {
       logDebug("Finished with status ${mInfo.Status}")
       mNotifier.notifyUploadSpeed(mId, 0)
+      mInfo = mInfo.copy(Visibility = UploadContract.Visibility.VISIBLE_COMPLETE)
       mInfo.partialUpdate(mDatabase)
       closeFds()
     }
@@ -215,10 +218,6 @@ internal class UploadThread(
     val headers = mInfo.Headers
     if (headers != null) {
       builder.headers(headers)
-    }
-    val userAgent = mInfo.UserAgent
-    if (userAgent != null) {
-      builder.header("User-Agent", userAgent)
     }
     return builder
         .url(mInfo.TargeUrl)

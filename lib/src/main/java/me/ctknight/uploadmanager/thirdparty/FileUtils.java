@@ -188,7 +188,7 @@ public class FileUtils {
    * @author paulburke
    */
   public static boolean isDownloadsDocument(Uri uri) {
-    return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    return "downloads".equals(uri.getAuthority()) || "com.android.providers.downloads.documents".equals(uri.getAuthority());
   }
 
   /**
