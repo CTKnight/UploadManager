@@ -4,19 +4,19 @@
 
 package me.ctknight.uploadmanager.internal
 
+import android.app.job.JobInfo
 import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
 import android.util.Log
 import androidx.core.content.getSystemService
+import me.ctknight.uploadmanager.UploadJobService
 import me.ctknight.uploadmanager.UploadRecord
 import me.ctknight.uploadmanager.util.LogUtils
-import android.content.ComponentName
-import android.app.job.JobInfo
-import android.os.Build
-import me.ctknight.uploadmanager.UploadJobService
 import kotlin.random.Random
 
 
@@ -35,14 +35,18 @@ internal object Helpers {
       UploadNotifier.getInstance(context).update()
     }
   }
+
   internal fun scheduleJob(context: Context, record: UploadRecord?): Boolean {
     if (record == null) {
       Log.w(LogUtils.makeTag<Helpers>(), "scheduleJob: record is null, skipped")
       return false
     }
-    val scheduler:JobScheduler = context.getSystemService()!!
+    val scheduler: JobScheduler = context.getSystemService()!!
     val jobId = record._ID.toInt()
     scheduler.cancel(jobId)
+
+    if (!record.isReadyToSchdule()) return false
+
     val builder = JobInfo.Builder(jobId,
         ComponentName(context, UploadJobService::class.java))
     val latency = record.minLatency()

@@ -231,10 +231,16 @@ internal class UploadNotifier(private val mContext: Context) {
           )
         }
         NotificationStatus.COMPLETE -> {
-          if (record.Status.isFailed()) {
-            builder.setContentText(resources.getString(R.string.notification_upload_unsuccessfully))
-          } else if (record.Status.isSuccess()) {
-            builder.setContentText(resources.getString(R.string.notification_upload_successfully))
+          when {
+            record.Status.isSuccess() -> {
+              builder.setContentText(resources.getString(R.string.notification_upload_successfully))
+            }
+            record.Status.isDeletedOrCanceled() -> {
+              builder.setContentText(resources.getString(R.string.notification_upload_cancel))
+            }
+            record.Status.isFailed() -> {
+              builder.setContentText(resources.getString(R.string.notification_upload_unsuccessfully))
+            }
           }
         }
       }

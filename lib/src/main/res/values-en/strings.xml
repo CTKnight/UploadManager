@@ -65,4 +65,5 @@
     <string name="upload_queued">Upload queued</string>
     <string name="upload_failed">Upload unsuccessfully</string>
     <string name="upload_complete">Upload complete</string>
+    <string name="notification_upload_cancel">Upload canceled</string>
 </resources>

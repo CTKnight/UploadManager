@@ -96,7 +96,7 @@ object UploadContract {
     DELETED(497),
     FAILED(498);
 
-    internal fun isRetryable(): Boolean =
+    internal fun isWaiting(): Boolean =
         statusCode in 194..197
 
     internal fun isOnGoing(): Boolean =

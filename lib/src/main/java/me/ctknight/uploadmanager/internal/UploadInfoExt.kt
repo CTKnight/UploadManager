@@ -28,20 +28,22 @@ internal fun UploadRecord.isReadyToSchdule(): Boolean =
     Status.isReadyToSchedule()
 
 internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus? {
-  if (Visibility !in
-      arrayOf(UploadContract.Visibility.VISIBLE, UploadContract.Visibility.VISIBLE_COMPLETE)) {
-    return null
-  }
-  return when (Status) {
-    UploadContract.UploadStatus.WAITING_FOR_WIFI -> UploadNotifier.NotificationStatus.WAITING
-    UploadContract.UploadStatus.RUNNING -> UploadNotifier.NotificationStatus.ACTIVE
-    else -> {
-      if (Status.isCompleted()) {
-        UploadNotifier.NotificationStatus.COMPLETE
-      } else {
-        null
+  return when (Visibility) {
+    UploadContract.Visibility.VISIBLE -> {
+      when {
+        Status.isWaiting() -> UploadNotifier.NotificationStatus.WAITING
+        Status == UploadContract.UploadStatus.RUNNING -> UploadNotifier.NotificationStatus.ACTIVE
+        Status.isCompleted() -> UploadNotifier.NotificationStatus.COMPLETE
+        else -> null
       }
     }
+    UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE -> {
+      when {
+        Status.isCompleted() -> UploadNotifier.NotificationStatus.COMPLETE
+        else -> null
+      }
+    }
+    else -> null
   }
 }
 

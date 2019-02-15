@@ -14,17 +14,22 @@ import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.UploadNotifier
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import me.ctknight.uploadmanager.util.LogUtils
+import me.ctknight.uploadmanager.util.NetworkUtils
 import okhttp3.Headers
 import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
 
 
 class UploadManager private constructor(private val context: Context) {
-  private val mBaseUri = UploadContract.UPLOAD_CONTENT_URI
   private val mDatabase = Database.getInstance(context)
   private val mJobScheduler: JobScheduler = context.getSystemService()!!
 
   init {
     UploadNotifier.getInstance(context).update()
+  }
+
+  fun setNetworkClient(client: OkHttpClient) {
+    NetworkUtils.sNetworkClient
   }
 
   fun enqueue(request: Request): Long {
@@ -62,7 +67,6 @@ class UploadManager private constructor(private val context: Context) {
         mJobScheduler.cancel(it.toInt())
       }
     }
-
   }
 
   // TODO

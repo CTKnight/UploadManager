@@ -64,4 +64,5 @@
     <string name="upload_queued">上传已加入队列</string>
     <string name="upload_failed">上传失败</string>
     <string name="upload_complete">上传成功</string>
+    <string name="notification_upload_cancel">上传取消</string>
 </resources>

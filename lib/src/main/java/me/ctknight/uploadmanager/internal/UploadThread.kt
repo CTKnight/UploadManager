@@ -91,7 +91,7 @@ internal class UploadThread(
         throw IllegalStateException("Execution should always throw final error codes")
       }
 
-      if (mInfo.Status.isRetryable()) {
+      if (mInfo.Status.isWaiting()) {
         mInfo = if (mMadeProgress) {
           mInfo.copy(NumFailed = 1)
         } else {
@@ -110,8 +110,6 @@ internal class UploadThread(
         } else {
           mInfo.copy(Status = CAN_NOT_RESUME)
         }
-      } else {
-        mInfo = mInfo.copy(Status = CAN_NOT_RESUME)
       }
 
       if (mInfo.Status == WAITING_FOR_NETWORK && mInfo.isMeteredAllowed(mContext)) {
@@ -156,6 +154,7 @@ internal class UploadThread(
       if (!mCall.isCanceled) {
         mCall.cancel()
       }
+      throw StopRequestException(CANCELED, "shutdown requested")
     }
   }
 

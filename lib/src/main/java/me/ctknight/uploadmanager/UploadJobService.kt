@@ -72,7 +72,7 @@ class UploadJobService : JobService() {
   }
 
   override fun onStopJob(params: JobParameters): Boolean {
-    val id = params.jobId
+     val id = params.jobId
 
     val thread: UploadThread?
     synchronized(mActiveThreads) {
