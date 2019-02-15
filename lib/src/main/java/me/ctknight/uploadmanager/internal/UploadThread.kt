@@ -58,8 +58,8 @@ internal class UploadThread(
   override fun run() {
     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
 //    connectivityManager.registerDefaultNetworkCallback(object: )
-    if (mInfo.Status == SUCCESS) {
-      logDebug("run: skipping finished item id: $mId")
+    if (mInfo.Status.isCompleted()) {
+      logDebug("run: skipping completed item id: $mId with status: ${mInfo.Status}")
       return
     }
     try {
@@ -124,7 +124,6 @@ internal class UploadThread(
     } finally {
       logDebug("Finished with status ${mInfo.Status}")
       mNotifier.notifyUploadSpeed(mId, 0)
-      mInfo = mInfo.copy(Visibility = UploadContract.Visibility.VISIBLE_COMPLETE)
       mInfo.partialUpdate(mDatabase)
       closeFds()
     }

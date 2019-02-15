@@ -89,12 +89,17 @@ internal class UploadNotifier(private val mContext: Context) {
     // complete and failed is not (can be swiped)
 
     val clustered = uploads
-        .filter { it.Status != UploadContract.UploadStatus.DELETED }
+        .filter {
+          it.Status != UploadContract.UploadStatus.DELETED &&
+              (it.Visibility == UploadContract.Visibility.VISIBLE ||
+                  (it.Visibility == UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE
+                      && it.Status.isCompleted()))
+        }
         .groupBy {
           val notificationStatus = it.notificationStatus()
           return@groupBy when (notificationStatus) {
-            in arrayOf(NotificationStatus.ACTIVE, NotificationStatus.WAITING) ->
-              Pair(it._ID, notificationStatus)
+            NotificationStatus.WAITING ->
+              Pair(-1L, notificationStatus)
             else ->
               Pair(it._ID, notificationStatus)
           }
@@ -306,7 +311,8 @@ internal class UploadNotifier(private val mContext: Context) {
       val title = info.NotificationTitle
       return if (title.isNullOrEmpty()) {
         // TODO: fix for multiple files
-        info.Parts.firstOrNull { it.fileInfo != null }?.fileInfo?.fileName ?: res.getString(R.string.upload_unknown_upload_title)
+        info.Parts.firstOrNull { it.fileInfo != null }?.fileInfo?.fileName
+            ?: res.getString(R.string.upload_unknown_upload_title)
       } else {
         title
       }

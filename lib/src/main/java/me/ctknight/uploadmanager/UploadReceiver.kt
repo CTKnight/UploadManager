@@ -104,11 +104,7 @@ class UploadReceiver : BroadcastReceiver() {
       Log.w("UploadReceiver", "Missing details for upload $id")
       return
     }
-    status = record.Status
-    visibility = record.Visibility
-    if (status.isCompleted() &&
-        (visibility == UploadContract.Visibility.VISIBLE_COMPLETE))
-      (record as UploadRecord.Impl).copy(Visibility = UploadContract.Visibility.HIDDEN_COMPLETE).partialUpdate(database)
+    (record as UploadRecord.Impl).copy(Visibility = UploadContract.Visibility.HIDDEN).partialUpdate(database)
   }
 
   /**

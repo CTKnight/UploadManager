@@ -123,9 +123,7 @@ object UploadContract {
   enum class Visibility {
     VISIBLE,
     HIDDEN,
-    VISIBLE_COMPLETE,
     HIDDEN_UNTIL_COMPLETE,
-    HIDDEN_COMPLETE
   }
 
   enum class NetworkState {
