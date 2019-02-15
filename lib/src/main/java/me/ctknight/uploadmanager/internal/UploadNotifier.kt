@@ -249,13 +249,7 @@ internal class UploadNotifier(private val mContext: Context) {
       val inboxStyle = NotificationCompat.InboxStyle(builder)
       cluster.forEach { inboxStyle.addLine(getUploadTitle(res, it)) }
 
-      if (type == NotificationStatus.ACTIVE) {
-        builder.setContentTitle(res.getQuantityString(
-            R.plurals.notif_summary_active, cluster.size, cluster.size))
-        builder.setContentText(remainingText)
-        builder.setContentInfo(percentText)
-        inboxStyle.setSummaryText(remainingText)
-      } else if (type == NotificationStatus.WAITING) {
+      if (type == NotificationStatus.WAITING) {
         builder.setContentTitle(
             res.getQuantityString(R.plurals.notif_summary_waiting, cluster.size, cluster.size))
         builder.setContentText(

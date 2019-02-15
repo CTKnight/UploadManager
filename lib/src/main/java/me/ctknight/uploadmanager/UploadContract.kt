@@ -31,7 +31,7 @@ object UploadContract {
     /**
      * The minimum amount of progress that has to be done before the progress bar gets updated
      */
-    val MIN_PROGRESS_STEP = 1024
+    val MIN_PROGRESS_STEP = 8192
     /**
      * The minimum amount of time that has to elapse before the progress bar gets updated, in
      * ms
