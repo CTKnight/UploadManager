@@ -1,5 +1,6 @@
+include ':sample'
 /*
  * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
  */
 
-include(':lib')
+include':lib', ':sample'

@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2019. All rights reserved. Lai Jiewen <alanljw12345@gmail.com>
+ */
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        applicationId "me.ctknight.sample"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
+    implementation "androidx.core:core-ktx:${androidXVersion}"
+    implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    implementation project(':lib')
+}
