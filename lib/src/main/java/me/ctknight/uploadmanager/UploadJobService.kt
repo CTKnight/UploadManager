@@ -25,7 +25,9 @@ class UploadJobService : JobService() {
 
   private val mObserver = object : Query.Listener {
     override fun queryResultsChanged() {
-      Helpers.sAsyncHandler.post { UploadNotifier.getInstance(this@UploadJobService).update() }
+//      Helpers.sAsyncHandler.post {
+        UploadNotifier.getInstance(this@UploadJobService).update()
+//      }
     }
   }
 

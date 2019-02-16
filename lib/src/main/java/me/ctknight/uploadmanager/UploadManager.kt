@@ -63,7 +63,7 @@ class UploadManager private constructor(private val context: Context) {
         Log.w(TAG, "cancel: record with id: $it is null")
         return@forEach
       }
-      if (!info.Status.isCompleted()) {
+      if (!info.Status.isTerminated()) {
         mJobScheduler.cancel(it.toInt())
       }
     }

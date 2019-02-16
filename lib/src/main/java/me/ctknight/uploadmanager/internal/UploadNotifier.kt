@@ -93,7 +93,7 @@ internal class UploadNotifier(private val mContext: Context) {
           it.Status != UploadContract.UploadStatus.DELETED &&
               (it.Visibility == UploadContract.Visibility.VISIBLE ||
                   (it.Visibility == UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE
-                      && it.Status.isCompleted()))
+                      && it.Status.isTerminated()))
         }
         .groupBy {
           val notificationStatus = it.notificationStatus()
@@ -149,7 +149,7 @@ internal class UploadNotifier(private val mContext: Context) {
     val uploadIds = getUploadIds(cluster)
     if (type == NotificationStatus.ACTIVE || type == NotificationStatus.WAITING) {
       val uri = Uri.Builder().scheme("active-ul")
-          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
+          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).appendPath(tag.toString()).build()
       val intent = Intent(UploadContract.NotificationAction.List.actionString,
           uri, mContext, UploadReceiver::class.java)
       intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
@@ -163,7 +163,7 @@ internal class UploadNotifier(private val mContext: Context) {
       }
 
       val cancelUri = Uri.Builder().scheme("cancel-ul")
-          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).build()
+          .appendPath(UploadContract.UPLOAD_CONTENT_URI.toString()).appendPath(tag.toString()).build()
       val cancelIntent = Intent(
           UploadContract.NotificationAction.Cancel.actionString,
           cancelUri,
@@ -176,12 +176,12 @@ internal class UploadNotifier(private val mContext: Context) {
 
       builder.addAction(android.R.drawable.ic_menu_close_clear_cancel,
           mContext.getString(R.string.notification_action_cancel),
-          PendingIntent.getBroadcast(mContext, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+          PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0))
       builder.setCategory(NotificationCompat.CATEGORY_PROGRESS)
     } else if (type == NotificationStatus.COMPLETE) {
       val record = cluster.firstOrNull()
       if (record != null && id != -1L) {
-        // TODO: add redo for failed uploads
+        // TODO: add redo for failed uploads, and set Visibility accordingly
         val uri = ContentUris.withAppendedId(UploadContract.UPLOAD_CONTENT_URI, id)
         builder.setAutoCancel(true)
         val action =

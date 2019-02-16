@@ -99,7 +99,7 @@ object UploadContract {
     internal fun isWaiting(): Boolean =
         statusCode in 194..197
 
-    internal fun isOnGoing(): Boolean =
+    internal fun isRunning(): Boolean =
         this == RUNNING
 
     internal fun isDeletedOrCanceled(): Boolean = this == DELETED || this == CANCELED
@@ -108,7 +108,7 @@ object UploadContract {
      * Returns whether the upload has completed (either with success or
      * error).
      */
-    internal fun isCompleted(): Boolean =
+    internal fun isTerminated(): Boolean =
         statusCode in 200..300 || statusCode in 400..600
 
     internal fun isFailed(): Boolean =

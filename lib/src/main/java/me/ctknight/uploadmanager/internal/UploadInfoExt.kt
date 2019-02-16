@@ -33,13 +33,13 @@ internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatu
       when {
         Status.isWaiting() -> UploadNotifier.NotificationStatus.WAITING
         Status == UploadContract.UploadStatus.RUNNING -> UploadNotifier.NotificationStatus.ACTIVE
-        Status.isCompleted() -> UploadNotifier.NotificationStatus.COMPLETE
+        Status.isTerminated() -> UploadNotifier.NotificationStatus.COMPLETE
         else -> null
       }
     }
     UploadContract.Visibility.HIDDEN_UNTIL_COMPLETE -> {
       when {
-        Status.isCompleted() -> UploadNotifier.NotificationStatus.COMPLETE
+        Status.isTerminated() -> UploadNotifier.NotificationStatus.COMPLETE
         else -> null
       }
     }

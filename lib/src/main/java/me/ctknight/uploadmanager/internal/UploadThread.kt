@@ -57,15 +57,24 @@ internal class UploadThread(
 
   override fun run() {
     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-//    connectivityManager.registerDefaultNetworkCallback(object: )
-    if (mInfo.Status.isCompleted()) {
-      logDebug("run: skipping completed item id: $mId with status: ${mInfo.Status}")
-      return
-    }
+
+    // task status checking
+
     try {
       val info = mSystemFacade.getActiveNetworkInfo()
       if (info != null) {
         mNetworkType = info.type
+      }
+      when {
+        mInfo.Status.isTerminated() -> {
+          logDebug("run: skipping completed item id: $mId with status: ${mInfo.Status}")
+          return
+        }
+        mInfo.Status.isRunning() -> {
+          // maybe the last time shutdown unexpectedly
+          throw StopRequestException(FAILED,
+              "run: the incoming task info status is ${mInfo.Status}, unacceptable")
+        }
       }
       mInfo = mInfo.copy(Status = RUNNING)
       mInfo.partialUpdate(mDatabase)
@@ -78,7 +87,7 @@ internal class UploadThread(
         mInfo = mInfo.copy(TotalBytes = mInfo.CurrentBytes)
       }
     } catch (e: StopRequestException) {
-      if (!mCall.isCanceled) {
+      if (::mCall.isInitialized && !mCall.isCanceled) {
         mCall.cancel()
       }
       mInfo = mInfo.copy(ErrorMsg = e.message, Status = e.finalStatus)
