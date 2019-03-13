@@ -45,7 +45,7 @@ internal object Helpers {
     val jobId = record._ID.toInt()
     scheduler.cancel(jobId)
 
-    if (!record.isReadyToSchdule()) return false
+    if (!record.isReadyToSchedule()) return false
 
     val builder = JobInfo.Builder(jobId,
         ComponentName(context, UploadJobService::class.java))

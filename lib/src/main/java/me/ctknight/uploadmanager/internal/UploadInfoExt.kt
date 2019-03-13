@@ -24,7 +24,7 @@ internal fun UploadRecord.partialUpdate(database: UploadDatabase) {
   )
 }
 
-internal fun UploadRecord.isReadyToSchdule(): Boolean =
+internal fun UploadRecord.isReadyToSchedule(): Boolean =
     Status.isReadyToSchedule()
 
 internal fun UploadRecord.notificationStatus(): UploadNotifier.NotificationStatus? {

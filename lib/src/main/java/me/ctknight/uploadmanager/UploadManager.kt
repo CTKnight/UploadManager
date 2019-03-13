@@ -24,12 +24,8 @@ class UploadManager private constructor(private val context: Context) {
   private val mDatabase = Database.getInstance(context)
   private val mJobScheduler: JobScheduler = context.getSystemService()!!
 
-  init {
-    UploadNotifier.getInstance(context).update()
-  }
-
   fun setNetworkClient(client: OkHttpClient) {
-    NetworkUtils.sNetworkClient
+    NetworkUtils.sNetworkClient = client
   }
 
   fun enqueue(request: Request): Long {
@@ -81,6 +77,17 @@ class UploadManager private constructor(private val context: Context) {
             UploadContract.UploadStatus.PENDING, 0, null, it)
       }
     }
+  }
+
+  /**
+   * call this *only once* when your app starts, typically on Application.onCreate
+   * this method will schedule all onGoing tasks since last termination or crash
+   */
+  fun init() {
+    UploadNotifier.getInstance(context).update()
+    mDatabase.uploadManagerQueries.selectAll().executeAsList()
+        .filter { !it.Status.isTerminated() }
+        .forEach { Helpers.scheduleJob(context, it) }
   }
 
   class Request internal constructor(builder: Builder) {
