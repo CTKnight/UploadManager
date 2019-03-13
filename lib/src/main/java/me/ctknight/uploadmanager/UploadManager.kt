@@ -12,6 +12,7 @@ import androidx.core.content.getSystemService
 import me.ctknight.uploadmanager.internal.Database
 import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.UploadNotifier
+import me.ctknight.uploadmanager.internal.partialUpdate
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import me.ctknight.uploadmanager.util.LogUtils
 import me.ctknight.uploadmanager.util.NetworkUtils
@@ -54,13 +55,15 @@ class UploadManager private constructor(private val context: Context) {
       throw IllegalArgumentException("input param 'ids' can't be null")
     }
     ids.forEach {
-      val info = mDatabase.uploadManagerQueries.selectById(it).executeAsOneOrNull()
+      var info = mDatabase.uploadManagerQueries.selectById(it).executeAsOneOrNull() as UploadRecord.Impl?
       if (info == null) {
         Log.w(TAG, "cancel: record with id: $it is null")
         return@forEach
       }
       if (!info.Status.isTerminated()) {
         mJobScheduler.cancel(it.toInt())
+        info = info.copy(Status = UploadContract.UploadStatus.CANCELED)
+        info.partialUpdate(mDatabase)
       }
     }
   }
