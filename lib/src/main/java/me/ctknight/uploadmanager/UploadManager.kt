@@ -66,6 +66,7 @@ class UploadManager private constructor(private val context: Context) {
         info.partialUpdate(mDatabase)
       }
     }
+    UploadNotifier.getInstance(context).update()
   }
 
   // TODO
