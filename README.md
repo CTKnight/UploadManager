@@ -9,9 +9,11 @@ This is a project based on AOSP DownloadManager and I made this with kotlin and 
 * get a instance of UploadManager
 ```kotlin
     val uploadManager: UploadManager = UploadManager.getUploadManger(context);
+    // init it when your app boots
+    uploadManager.init()
 ```
-The best practise is to call `UploadManager.getUploadManger(context)` as early as you need to display
-notifications related to upload tasks
+The best practise is to call `UploadManager.init()` as early as you need to display
+notifications related to upload tasks and to clear/resume the crashed tasks
 
 * upload
 ```kotlin
