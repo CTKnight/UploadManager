@@ -72,7 +72,7 @@ internal object Helpers {
 
       }
     }
-    scheduler.schedule(builder.build())
-    return true
+    val scheduleResult = scheduler.schedule(builder.build()) == JobScheduler.RESULT_SUCCESS
+    return scheduleResult
   }
 }

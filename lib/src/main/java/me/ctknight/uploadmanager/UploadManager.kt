@@ -62,6 +62,7 @@ class UploadManager private constructor(private val context: Context) {
       }
       if (!info.Status.isTerminated()) {
         mJobScheduler.cancel(it.toInt())
+        // in case no thread for this id
         info = info.copy(Status = UploadContract.UploadStatus.CANCELED)
         info.partialUpdate(mDatabase)
       }
@@ -88,6 +89,7 @@ class UploadManager private constructor(private val context: Context) {
    * this method will schedule all onGoing tasks since last termination or crash
    */
   fun init() {
+    mJobScheduler.cancelAll()
     UploadNotifier.getInstance(context).update()
     mDatabase.uploadManagerQueries.selectAll().executeAsList()
         .filter { !it.Status.isTerminated() }
