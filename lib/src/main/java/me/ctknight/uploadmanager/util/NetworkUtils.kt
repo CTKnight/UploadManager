@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object NetworkUtils {
 
-  private val DEFAULT_TIMEOUT = (20 * 1000L).toInt()
+  private const val DEFAULT_TIMEOUT = (20 * 1000L).toInt()
   private val DEFAULT_CLIENT = buildClient()
   @Volatile
   var customNetworkClient: OkHttpClient? = null
