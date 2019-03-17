@@ -61,9 +61,32 @@ This project already add `consumerProguardFiles`, so feel free to use proguard.
 
 ## How to install
 
-Check the release tab, choose latest tag, download the aar attachment and setup your .gradle file
-If you reference aar in `@aar` notion, be sure to turn on `transitive=true`,
-runtime errors/exceptions like `ClassNotFound` will be raised
+For now, you have to download source and install it to local maven. I will publish it to online repo soon.
+
+1. clone this repo and run `gradlew lib:install`
+    this will install the UploadManager library to your local maven repo (in `~/.m2`)
+
+2. edit `yourProject/app/build.gradle`
+
+    add
+    ```groovy
+    repositories {
+        google()
+        jcenter()
+        mavenLocal()
+    }
+    ```
+
+    and
+
+    ```groovy
+    dependencies {
+        implementation 'me.ctknight.uploadmanager:lib:$latest-version'
+    }
+    ```
+
+    be sure to replace the $latest-version with correct version number
+
 ## License
 
 ```
