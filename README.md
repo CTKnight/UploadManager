@@ -55,15 +55,13 @@ TODO
 
 ------
 
-## proguard
+## Proguard
 
 This project already add `consumerProguardFiles`, so feel free to use proguard.
 
-## how to get a binary
+## How to install
 
-
-Sorry but at this moment you have to build one from this source,
-I will build one as soon as API is stable.
+Check the release tab, choose latest tag, download the aar attachment and setup your .gradle file
 
 ## License
 
