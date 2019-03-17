@@ -2,7 +2,7 @@
 
 
 buildscript {
-    apply from: "${rootDir.absolutePath}/ext.gradle"
+//    apply from: "${rootDir.absolutePath}/ext.gradle"
     repositories {
         google()
         jcenter()
@@ -10,8 +10,6 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$buildToolGradleVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "com.squareup.sqldelight:gradle-plugin:$sqldelightVersion"
     }
 }
 

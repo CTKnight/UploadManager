@@ -5,6 +5,10 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.squareup.sqldelight'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'me.ctknight.uploadmanager'
+version = "$uploadManagerVersionName"
 
 android {
     compileSdkVersion 28
@@ -14,7 +18,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "$uploadManagerVersionName"
     }
     buildTypes {
         release {
@@ -28,17 +32,31 @@ android {
     }
 }
 
+buildscript {
+//    apply from: "${rootDir.absolutePath}/ext.gradle"
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "com.squareup.sqldelight:gradle-plugin:$sqldelightVersion"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:$androidMavenGradlePluginVersion"
+    }
+}
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
     implementation "androidx.core:core-ktx:${androidXVersion}"
-    implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    api "com.squareup.okhttp3:okhttp:${okHttpVersion}"
     api "com.squareup.sqldelight:runtime:${sqldelightVersion}"
     implementation "com.squareup.sqldelight:android-driver:${sqldelightVersion}"
 }
 
 sqldelight {
     UploadDatabase {
+//        schemaOutputDirectory = file("db")
     }
 }
