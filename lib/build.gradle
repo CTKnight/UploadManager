@@ -33,7 +33,7 @@ ext {
     kotlinVersion = "1.3.11"
     supportVersion = "28.0.0"
     okHttpVersion = "3.13.1"
-    sqldelightVersion = "1.0.3"
+    sqldelightVersion = "1.1.1"
     androidXVersion = "1.0.0"
 }
 
@@ -42,12 +42,13 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
     implementation "androidx.core:core-ktx:${androidXVersion}"
     implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    api "com.squareup.sqldelight:runtime:${sqldelightVersion}"
     implementation "com.squareup.sqldelight:android-driver:${sqldelightVersion}"
 }
 
 buildscript {
     ext {
-        sqldelightVersion = "1.0.3"
+        sqldelightVersion = "1.1.1"
     }
     repositories {
         google()
@@ -59,5 +60,6 @@ buildscript {
 }
 
 sqldelight {
-    className = "UploadDatabase" // Defaults to "Database"
+    UploadDatabase {
+    }
 }

@@ -62,7 +62,8 @@ This project already add `consumerProguardFiles`, so feel free to use proguard.
 ## How to install
 
 Check the release tab, choose latest tag, download the aar attachment and setup your .gradle file
-
+If you reference aar in `@aar` notion, be sure to turn on `transitive=true`,
+runtime errors/exceptions like `ClassNotFound` will be raised
 ## License
 
 ```
