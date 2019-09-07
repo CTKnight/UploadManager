@@ -15,8 +15,8 @@ android {
     buildToolsVersion buildToolVersion
 
     defaultConfig {
-        minSdkVersion minSdkVersion
-        targetSdkVersion targetSdkVersion
+        minSdkVersion uploadManagerMinSdkVersion
+        targetSdkVersion uploadManagerTargetSdkVersion
         versionName uploadManagerVersionName
     }
     buildTypes {

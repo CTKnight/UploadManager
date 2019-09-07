@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId "me.ctknight.sample"
-        minSdkVersion minSdkVersion
-        targetSdkVersion targetSdkVersion
+        minSdkVersion uploadManagerMinSdkVersion
+        targetSdkVersion uploadManagerTargetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName uploadManagerVersionName
     }
 
     buildTypes {
@@ -31,9 +31,9 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
-    implementation "androidx.appcompat:appcompat:${androidXVersion}"
-    implementation "androidx.core:core-ktx:${androidXVersion}"
-    implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
+    implementation "androidx.appcompat:appcompat:$androidXVersion"
+    implementation "androidx.core:core-ktx:$androidXVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
     implementation project(':lib')
 }
