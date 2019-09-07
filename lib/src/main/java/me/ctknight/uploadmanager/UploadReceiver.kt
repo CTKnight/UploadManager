@@ -134,7 +134,7 @@ class UploadReceiver : BroadcastReceiver() {
 
   companion object {
     private val TAG = LogUtils.makeTag<UploadReceiver>()
-    internal const val EXTRA_CANCELED_UPLOAD_IDS = "${BuildConfig.APPLICATION_ID}.extras.canceledids"
-    internal const val EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG = "${BuildConfig.APPLICATION_ID}.extras.canceledtag"
+    internal const val EXTRA_CANCELED_UPLOAD_IDS = "${BuildConfig.LIBRARY_PACKAGE_NAME}.extras.canceledids"
+    internal const val EXTRA_CANCELED_UPLOAD_NOTIFICATION_TAG = "${BuildConfig.LIBRARY_PACKAGE_NAME}.extras.canceledtag"
   }
 }
