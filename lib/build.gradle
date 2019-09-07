@@ -7,18 +7,18 @@ apply plugin: 'kotlin-android'
 apply plugin: 'com.squareup.sqldelight'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'me.ctknight.uploadmanager'
-version = "$uploadManagerVersionName"
+group = uploadManagerGroup
+version = uploadManagerVersionName
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    buildToolsVersion buildTKoolVersion
 
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
-        versionName "$uploadManagerVersionName"
+        versionName uploadManagerVersionName
     }
     buildTypes {
         release {
@@ -33,7 +33,6 @@ android {
 }
 
 buildscript {
-//    apply from: "${rootDir.absolutePath}/ext.gradle"
     repositories {
         google()
         jcenter()
