@@ -12,12 +12,11 @@ version = uploadManagerVersionName
 
 android {
     compileSdkVersion 28
-    buildToolsVersion buildTKoolVersion
+    buildToolsVersion buildToolVersion
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 1
+        minSdkVersion minSdkVersion
+        targetSdkVersion targetSdkVersion
         versionName uploadManagerVersionName
     }
     buildTypes {
@@ -29,6 +28,9 @@ android {
             minifyEnabled false
             consumerProguardFiles 'proguard-rules.pro'
         }
+    }
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -47,15 +49,15 @@ buildscript {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
-    implementation "androidx.core:core-ktx:${androidXVersion}"
-    api "com.squareup.okhttp3:okhttp:${okHttpVersion}"
-    api "com.squareup.sqldelight:runtime:${sqldelightVersion}"
-    implementation "com.squareup.sqldelight:android-driver:${sqldelightVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
+    implementation "androidx.core:core-ktx:$androidXVersion"
+    api "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    api "com.squareup.sqldelight:runtime:$sqldelightVersion"
+    implementation "com.squareup.sqldelight:android-driver:$sqldelightVersion"
 }
 
 sqldelight {
     UploadDatabase {
-//        schemaOutputDirectory = file("db")
+
     }
 }

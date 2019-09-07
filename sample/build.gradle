@@ -9,8 +9,8 @@ android {
 
     defaultConfig {
         applicationId "me.ctknight.sample"
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdkVersion minSdkVersion
+        targetSdkVersion targetSdkVersion
         versionCode 1
         versionName "1.0"
     }
