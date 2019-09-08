@@ -19,7 +19,9 @@ import me.ctknight.uploadmanager.UploadRecord
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import okhttp3.Headers
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.StringReader
 import java.io.StringWriter
 
@@ -38,7 +40,7 @@ internal class Database {
       )
       val httpUrlAdapter = object : ColumnAdapter<HttpUrl, String> {
         override fun decode(databaseValue: String) =
-            HttpUrl.get(databaseValue)
+                databaseValue.toHttpUrl()
 
         override fun encode(value: HttpUrl) =
             value.toString()
@@ -99,7 +101,7 @@ internal class Database {
                                 fileName = nextString()
                               }
                               "mimeType" -> {
-                                mimeType = MediaType.parse(nextString())
+                                mimeType = nextString().toMediaTypeOrNull()
                               }
                               "fileUri" -> {
                                 fileUri = Uri.parse(nextString())

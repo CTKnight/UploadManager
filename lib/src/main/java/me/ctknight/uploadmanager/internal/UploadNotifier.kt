@@ -26,7 +26,7 @@ import androidx.core.content.res.ResourcesCompat
 import me.ctknight.uploadmanager.*
 import me.ctknight.uploadmanager.thirdparty.SingletonHolder
 import me.ctknight.uploadmanager.util.LogUtils
-import me.ctknight.uploadmanager.util.TimeUtils
+import me.ctknight.uploadmanager.util.formatDuration
 import java.text.NumberFormat
 
 
@@ -286,7 +286,7 @@ internal class UploadNotifier(private val mContext: Context) {
         val remainingMillis = (total - current) * 1000 / speed
 
         remainingText = resources.getString(R.string.upload_remaining,
-            TimeUtils.formatDuration(remainingMillis, resources))
+            remainingMillis.formatDuration(resources))
       }
 
       percent = (current * 100 / total).toInt()

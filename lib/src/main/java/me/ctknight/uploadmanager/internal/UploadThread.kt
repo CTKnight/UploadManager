@@ -20,9 +20,9 @@ import me.ctknight.uploadmanager.UploadJobService
 import me.ctknight.uploadmanager.UploadRecord
 import me.ctknight.uploadmanager.thirdparty.CountingRequestBody
 import me.ctknight.uploadmanager.util.LogUtils
-import me.ctknight.uploadmanager.util.OkHttpUtils
+import me.ctknight.uploadmanager.util.createRequest
 import okhttp3.*
-import okhttp3.internal.Util
+import okhttp3.internal.closeQuietly
 import java.io.FileNotFoundException
 import java.io.IOException
 
@@ -87,7 +87,7 @@ internal class UploadThread(
         mInfo = mInfo.copy(TotalBytes = mInfo.CurrentBytes)
       }
     } catch (e: StopRequestException) {
-      if (::mCall.isInitialized && !mCall.isCanceled) {
+      if (::mCall.isInitialized && !mCall.isCanceled()) {
         mCall.cancel()
       }
       mInfo = mInfo.copy(ErrorMsg = e.message, Status = e.finalStatus)
@@ -160,7 +160,7 @@ internal class UploadThread(
     updateProgress()
 
     if (mShutdownRequested) {
-      if (!mCall.isCanceled) {
+      if (!mCall.isCanceled()) {
         mCall.cancel()
       }
       throw StopRequestException(CANCELED, "shutdown requested")
@@ -171,10 +171,10 @@ internal class UploadThread(
   private fun executeUpload() {
     checkConnectivity()
     uploadData().use { response ->
-      val responseMsg = response.body()?.string()
+      val responseMsg = response.body?.string()
       recordResponse(responseMsg)
       if (!response.isSuccessful) {
-        StopRequestException.throwUnhandledHttpError(response.code(), response.message())
+        StopRequestException.throwUnhandledHttpError(response.code, response.message)
       }
     }
   }
@@ -202,7 +202,7 @@ internal class UploadThread(
       if (fileInfo != null) {
         val fileDescriptor = getFileDescriptor(fileInfo.fileUri)
         fdList.add(fileDescriptor)
-        val fileRequestBody = OkHttpUtils.createRequestFromFile(fileInfo.mimeType, fileDescriptor)
+        val fileRequestBody = fileDescriptor.createRequest(fileInfo.mimeType)
         builder.addFormDataPart(it.name, fileInfo.fileName, fileRequestBody)
       } else {
         builder.addFormDataPart(it.name, it.value!!)
@@ -288,7 +288,7 @@ internal class UploadThread(
   }
 
   private fun closeFds() {
-    fdList.forEach { Util.closeQuietly(it) }
+    fdList.forEach {it.closeQuietly() }
     fdList.clear()
   }
 
