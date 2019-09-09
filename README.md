@@ -1,4 +1,7 @@
 # UploadManager (Alpha)
+
+[![CircleCI](https://circleci.com/gh/CTKnight/UploadManager.svg?style=svg)](https://circleci.com/gh/CTKnight/UploadManager)
+
 A Multipart upload solution on Android, including progress notification and network change.
 This is a project based on AOSP DownloadManager and I made this with kotlin and OkHttp3.
 
