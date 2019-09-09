@@ -126,7 +126,16 @@ class UploadManager private constructor(private val context: Context) {
     }
   }
 
-  class Query {}
+  class Query private constructor(
+    builder: Builder
+  ) {
+
+    data class Builder(
+      var ids: LongArray? = null
+    ) {
+      fun build() = Query(this)
+    }
+  }
 
   companion object {
     private object InstanceHolder : SingletonHolder<UploadManager, Context>(::UploadManager)
