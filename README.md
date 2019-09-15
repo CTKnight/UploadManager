@@ -11,7 +11,7 @@ This is a project based on AOSP DownloadManager and I made this with kotlin and 
 
 * get a instance of UploadManager
 ```kotlin
-    val uploadManager: UploadManager = UploadManager.getUploadManger(context);
+    val uploadManager: UploadManager = UploadManager.getUploadManger(context)
     // init it when your app boots
     uploadManager.init()
 ```
@@ -20,36 +20,35 @@ notifications related to upload tasks and to clear/resume the crashed tasks
 
 * upload
 ```kotlin
-    val uri = Uri.parse(fileUri)
-    val parts = listOf(
-    // parts with name-value pairs
-        Part("filecount", "1"),
-        Part("predefine", "1"),
-        Part("token", code),
-        Part("secret", password),
-    // parts with files
-        Part("file", fileInfo =  FileInfo(uri, MediaType.parse(info.mimeType
-                    ?: "application/octet-stream"), info.fileName))
-    )
-    // customized headers
-    val headers = Headers.of(mutableMapOf(Pair("User-Agent", "Box Android")))
-    val request = UploadManager.Request.Builder(
-        HttpUrl.get(BoxUtils.UPLOAD_URI.toString()),
-        parts,
-        headers
-    )
+    val uri = Uri.parse(info.fileUri)
+
+    val fileHeaders = mutableMapOf(Pair("User-Agent", "Box Android")).toHeaders()
+    // dsl for building request    
+    val request = request {
+      targetUrl = UPLOAD_URI.toString().toHttpUrl()
+      parts{
+        +Part("filecount", "1")
+        +Part("predefine", "1")
+        +Part("token", info.code)
+        +Part("secret", info.password)
+        +Part("expiration", Expiration.toSeconds(info.expireTimeOption!!).toString())
+        +Part("file", fileInfo =  FileInfo(uri, (info.mimeType
+            ?: "application/octet-stream").toMediaTypeOrNull(), info.fileName))
+      }
+      headers= fileHeaders
+    }
 
     uploadManage.enqueue(request.build())
 ```
 
 * cancel a upload task
 ```kotlin
-    uploadManger.cancel(uploadId);
+    uploadManger.cancel(uploadId)
 ```
 
 * restart a upload task
 ```kotlin
-    uploadManger.restartUpload(uploadId);
+    uploadManger.restartUpload(uploadId)
 ```
 
 * query a upload task

@@ -4,11 +4,12 @@
 
 package me.ctknight.uploadmanager
 
-
 import android.app.job.JobScheduler
 import android.content.Context
 import android.util.Log
 import androidx.core.content.getSystemService
+import com.autodsl.annotation.AutoDsl
+import com.autodsl.annotation.AutoDslCollection
 import me.ctknight.uploadmanager.internal.Database
 import me.ctknight.uploadmanager.internal.Helpers
 import me.ctknight.uploadmanager.internal.UploadNotifier
@@ -20,6 +21,7 @@ import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 
+typealias DatabaseQuery<T> = com.squareup.sqldelight.Query<T>
 
 class UploadManager private constructor(private val context: Context) {
   private val mDatabase = Database.getInstance(context)
@@ -43,7 +45,8 @@ class UploadManager private constructor(private val context: Context) {
           request.meteredAllowed,
           request.roamingAllowed
       )
-      id = mDatabase.uploadManagerQueries.lastInsertId().executeAsOne()
+      id = mDatabase.uploadManagerQueries.lastInsertId()
+          .executeAsOne()
     }
     Helpers.scheduleJob(context, id)
     return id
@@ -52,10 +55,11 @@ class UploadManager private constructor(private val context: Context) {
   fun cancel(vararg ids: Long) {
     if (ids.isEmpty()) {
       // called with nothing to remove!
-      throw IllegalArgumentException("input param 'ids' can't be null")
+      error("input param 'ids' can't be null")
     }
     ids.forEach {
-      var info = mDatabase.uploadManagerQueries.selectById(it).executeAsOneOrNull() as UploadRecord.Impl?
+      var info =
+        mDatabase.uploadManagerQueries.selectById(it).executeAsOneOrNull() as UploadRecord.Impl?
       if (info == null) {
         Log.w(TAG, "cancel: record with id: $it is null")
         return@forEach
@@ -67,19 +71,22 @@ class UploadManager private constructor(private val context: Context) {
         info.partialUpdate(mDatabase)
       }
     }
-    UploadNotifier.getInstance(context).update()
+    UploadNotifier.getInstance(context)
+        .update()
   }
 
   // TODO
-  fun query(query: UploadManager.Query): com.squareup.sqldelight.Query<List<UploadRecord>> {
+  fun query(query: UploadManager.Query): DatabaseQuery<List<UploadRecord>> {
     TODO()
   }
 
   fun restartUpload(vararg ids: Long) {
     mDatabase.transaction {
       ids.forEach {
-        mDatabase.uploadManagerQueries.restartUpload(0, -1,
-            UploadContract.UploadStatus.PENDING, 0, null, it)
+        mDatabase.uploadManagerQueries.restartUpload(
+            0, -1,
+            UploadContract.UploadStatus.PENDING, 0, null, it
+        )
       }
     }
   }
@@ -90,51 +97,47 @@ class UploadManager private constructor(private val context: Context) {
    */
   fun init() {
     mJobScheduler.cancelAll()
-    UploadNotifier.getInstance(context).update()
-    mDatabase.uploadManagerQueries.selectAll().executeAsList()
+    UploadNotifier.getInstance(context)
+        .update()
+    mDatabase.uploadManagerQueries.selectAll()
+        .executeAsList()
         .filter { !it.Status.isTerminated() }
         .forEach { Helpers.scheduleJob(context, it) }
   }
 
-  class Request internal constructor(builder: Builder) {
+//    @AutoDsl
+//  autodsl has bug in nested class, wo I manually copied generated code into src folder
+//  and work around default values
+  class Request(
     /**
      * @param url the HTTP or HTTPS URI to upload.
      */
-    internal val targetUrl: HttpUrl = builder.targetUrl
-    internal val parts: List<Part> = builder.parts
-    internal val headers: Headers? = builder.headers
-    internal val title: String? = builder.title
-    internal val description: String? = builder.description
-    internal val userAgent: String? = builder.userAgent
-    internal val meteredAllowed: Boolean = builder.meteredAllowed
-    internal val roamingAllowed: Boolean = builder.roamingAllowed
-    internal val notificationVisibility: UploadContract.Visibility = builder.notificationVisibility
-
-    data class Builder(
-        val targetUrl: HttpUrl,
-        val parts: List<Part>,
-        var headers: Headers? = null,
-        var title: String? = null,
-        var description: String? = null,
-        var userAgent: String? = null,
-        var meteredAllowed: Boolean = true,
-        var roamingAllowed: Boolean = true,
-        var notificationVisibility: UploadContract.Visibility = UploadContract.Visibility.VISIBLE
-    ) {
-      // TODO: check args here
-      fun build(): Request = Request(this)
-    }
+    val targetUrl: HttpUrl,
+    @AutoDslCollection(ArrayList::class)
+    val parts: List<Part>,
+    val headers: Headers?,
+    val title: String?,
+    val description: String?,
+    val userAgent: String?,
+    meteredAllowed: Boolean?,
+    roamingAllowed: Boolean?,
+    notificationVisibility: UploadContract.Visibility?
+  ) {
+    //    AutoDsl doesn't support default values yet
+    val meteredAllowed: Boolean = meteredAllowed ?: true
+    val roamingAllowed: Boolean = roamingAllowed ?: true
+    val notificationVisibility: UploadContract.Visibility =
+      notificationVisibility ?: UploadContract.Visibility.VISIBLE
   }
 
-  class Query private constructor(
-    builder: Builder
+//    @AutoDsl
+//  same as Request
+  class Query constructor(
+    val ids: LongArray,
+    val orderColumn: String?,
+    ascOrder: Boolean?
   ) {
-
-    data class Builder(
-      var ids: LongArray? = null
-    ) {
-      fun build() = Query(this)
-    }
+    val ascOrder: Boolean = ascOrder ?: true;
   }
 
   companion object {
@@ -147,7 +150,7 @@ class UploadManager private constructor(private val context: Context) {
      * @param context no need to be Application
      * @return a singleton instance of UploadManager
      */
-    @JvmStatic()
+    @JvmStatic
     fun getUploadManager(context: Context) = InstanceHolder.getInstance(context)
 
     /**
@@ -159,7 +162,8 @@ class UploadManager private constructor(private val context: Context) {
      * Broadcast intent action sent by the upload manager when the user clicks on a running
      * upload, either from a system notification or from the uploads UI.
      */
-    val ACTION_NOTIFICATION_CLICKED = "me.ctknight.uploadmanager.intent.action.UPLOAD_NOTIFICATION_CLICKED"
+    val ACTION_NOTIFICATION_CLICKED =
+      "me.ctknight.uploadmanager.intent.action.UPLOAD_NOTIFICATION_CLICKED"
 
     /**
      * Intent extra included with [.ACTION_UPLOAD_COMPLETE] intents, indicating the ID (as a
